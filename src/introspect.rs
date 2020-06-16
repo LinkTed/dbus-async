@@ -1,9 +1,8 @@
-use crate::DBus;
+use crate::{DBus, DBusResult};
 use dbus_message_parser::{Message, Value};
 use futures::channel::mpsc::{channel, Receiver};
 use futures::StreamExt;
 use std::convert::TryInto;
-use std::io::{Error as IoError, ErrorKind as IoErrorKind, Result as IoResult};
 use tokio::spawn;
 
 lazy_static! {
@@ -77,17 +76,13 @@ async fn introspect(dbus: DBus, mut receiver: Receiver<Message>) {
     }
 }
 
-pub(super) fn add_introspect(dbus: DBus) -> IoResult<()> {
+pub(super) fn add_introspect(dbus: DBus) -> DBusResult<()> {
     // If introspectable is true then add the introspectable interface handler.
     let (sender, receiver) = channel(1024);
     let interface = "org.freedesktop.DBus.Introspectable".try_into().unwrap();
     // Try to add the interface handler.
     if let Err(e) = dbus.add_method_call_interface(interface, sender) {
-        error!("add_interface: {}", e);
-        return Err(IoError::new(
-            IoErrorKind::Other,
-            format!("add_interface: {}", e),
-        ));
+        return Err(e);
     }
 
     // Spawn the introspectable handler.

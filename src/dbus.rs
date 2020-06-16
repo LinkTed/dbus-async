@@ -1,10 +1,9 @@
 use crate::command::Command;
 use crate::connection::Connection;
 use crate::error::DBusResult;
-use crate::helper::{get_unix_socket, split};
 use crate::introspect::add_introspect;
-use crate::message::{message_sink, message_stream};
-use crate::DBusNameFlag;
+use crate::stream::Stream;
+use crate::{DBusError, DBusNameFlag, ServerAddress};
 use dbus_message_parser::{Interface, Message, MessageType, ObjectPath, Value};
 use futures::channel::mpsc::{
     unbounded, Receiver as MpscReceiver, Sender as MpscSender, UnboundedSender,
@@ -12,7 +11,6 @@ use futures::channel::mpsc::{
 use futures::channel::oneshot::channel;
 use std::collections::HashSet;
 use std::convert::TryInto;
-use std::io::{Error as IoError, ErrorKind as IoErrorKind, Result as IoResult};
 use std::sync::Arc;
 use tokio::spawn;
 use tokio::task::JoinHandle;
@@ -21,7 +19,7 @@ use tokio::task::JoinHandle;
 #[derive(Clone)]
 pub struct DBus {
     command_sender: UnboundedSender<Command>,
-    socket_path: Arc<String>,
+    address: Arc<ServerAddress>,
 }
 
 impl DBus {
@@ -30,15 +28,12 @@ impl DBus {
     /// If the first argument (`introspectable`) is `true` then the Peer is introspectable.
     ///
     /// The `DBUS_SESSION_BUS_ADDRESS` environment variable **have to** be defined.
-    pub async fn session(introspectable: bool) -> IoResult<(DBus, JoinHandle<()>)> {
+    pub async fn session(introspectable: bool) -> DBusResult<(DBus, JoinHandle<()>)> {
         if let Some(path) = option_env!("DBUS_SESSION_BUS_ADDRESS") {
             DBus::new(path, introspectable).await
         } else {
             // It could not connect to any socket
-            Err(IoError::new(
-                IoErrorKind::Other,
-                "DBUS_SESSION_BUS_ADDRESS environment variable is not defined",
-            ))
+            Err(DBusError::DBusSessionBusAddress)
         }
     }
 
@@ -48,7 +43,7 @@ impl DBus {
     ///
     /// If there `DBUS_SYSTEM_BUS_ADDRESS` environment variable is defined then this path will be
     /// used, else `unix:path=/var/run/dbus/system_bus_socket`.
-    pub async fn system(introspectable: bool) -> IoResult<(DBus, JoinHandle<()>)> {
+    pub async fn system(introspectable: bool) -> DBusResult<(DBus, JoinHandle<()>)> {
         let path = if let Some(path) = option_env!("DBUS_SYSTEM_BUS_ADDRESS") {
             path
         } else {
@@ -57,30 +52,26 @@ impl DBus {
         DBus::new(path, introspectable).await
     }
 
-    /// Connect to the specific (`path`) DBus daemon.
+    /// Connect to the specific (`addressses`) DBus daemon.
     ///
     /// If the second argument (`introspectable`) is `true` then the Peer is introspectable.
-    pub async fn new(path: &str, introspectable: bool) -> IoResult<(DBus, JoinHandle<()>)> {
-        // Create all necessary channels.
+    pub async fn new(addressses: &str, introspectable: bool) -> DBusResult<(DBus, JoinHandle<()>)> {
         let (command_sender, command_receiver) = unbounded::<Command>();
-        let (message_sender, message_receiver) = unbounded::<Message>();
 
-        let socket = get_unix_socket(path).await?;
-        let (sink, stream) = split(socket)?;
+        // Create and spawn the stream and sink task.
+        let (address, stream) = Stream::new(addressses).await?;
+        let message_sender = stream.start(command_sender.clone());
 
-        // Spawn the sink task.
-        spawn(message_sink(message_receiver, sink));
-        // Spawn the stream task.
-        spawn(message_stream(stream, command_sender.clone()));
         // Spawn the connection task.
         let connection = Connection::from(command_receiver, message_sender);
         let connection_handle = spawn(connection.run());
 
-        let socket_path = Arc::new(path.to_string());
+        let address = Arc::new(address);
         let dbus = DBus {
             command_sender,
-            socket_path,
+            address,
         };
+
         if introspectable {
             add_introspect(dbus.clone())?;
         }
@@ -93,8 +84,7 @@ impl DBus {
             } else {
                 "no error name"
             };
-            let error = format!("call hello: {}", error);
-            Err(IoError::new(IoErrorKind::Other, error))
+            Err(DBusError::Hello(error.to_string()))
         } else {
             Ok((dbus, connection_handle))
         }
@@ -332,7 +322,7 @@ impl DBus {
     }
 
     /// Get the current path of the DBus daemon.
-    pub fn get_socket_path(&self) -> &str {
-        self.socket_path.as_ref()
+    pub fn get_address(&self) -> &ServerAddress {
+        self.address.as_ref()
     }
 }

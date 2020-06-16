@@ -54,9 +54,9 @@ If you want to implement a DBus service and do not implement the `dbus_async::Ha
 manually then use `dbus-async-derive` crate.
 
 ## TODO
-- [ ] Implement server address [parser](https://dbus.freedesktop.org/doc/dbus-specification.html#addresses)
+- [x] Implement server address [parser](https://dbus.freedesktop.org/doc/dbus-specification.html#addresses)
 - [ ] Add standard interfaces:
   * [ ] [`org.freedesktop.DBus.Peer`](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-peer)
   * [ ] [`org.freedesktop.DBus.ObjectManager`](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-objectmanager)
-- [ ] Add TCP support
+- [x] Add TCP support
 - [ ] FD support ([PR](https://github.com/rust-lang/rust/pull/69864))

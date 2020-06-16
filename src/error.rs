@@ -1,4 +1,5 @@
 use crate::command::Command;
+use crate::stream::StreamError;
 use dbus_message_parser::{Interface, Message, ObjectPath};
 use futures::channel::mpsc::TrySendError;
 use futures::channel::oneshot::Canceled;
@@ -16,6 +17,9 @@ pub enum DBusError {
     AddSignal(ObjectPath),
     DeleteSignal,
     ReceiveMessage(Option<Message>),
+    StreamError(StreamError),
+    DBusSessionBusAddress,
+    Hello(String),
     Close,
 }
 
@@ -65,6 +69,12 @@ impl From<DBusError> for IoError {
     }
 }
 
+impl From<StreamError> for DBusError {
+    fn from(e: StreamError) -> Self {
+        DBusError::StreamError(e)
+    }
+}
+
 impl Display for DBusError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
@@ -99,6 +109,12 @@ impl Display for DBusError {
             DBusError::ReceiveMessage(msg) => {
                 write!(f, "Could not receive response for message: {:?}", msg)
             }
+            DBusError::StreamError(e) => write!(f, "Could not create stream: {}", e),
+            DBusError::DBusSessionBusAddress => write!(
+                f,
+                "DBUS_SESSION_BUS_ADDRESS environment variable is not defined"
+            ),
+            DBusError::Hello(e) => write!(f, "Hello: {}", e),
             DBusError::Close => write!(f, "Could not close DBus"),
         }
     }

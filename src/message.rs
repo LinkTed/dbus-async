@@ -4,11 +4,13 @@ use dbus_message_parser::{DecodeError, Decoder, Encoder, Message};
 use futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
 use futures::stream::StreamExt;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::UnixStream;
 
 /// The message sink task. This task takes messages from the channel and send it through the DBus
 /// socket.
-pub async fn message_sink(mut message_receiver: UnboundedReceiver<Message>, mut sink: UnixStream) {
+pub async fn message_sink<T>(mut message_receiver: UnboundedReceiver<Message>, mut sink: T)
+where
+    T: AsyncWriteExt + Unpin,
+{
     // Get the next Message to send to the DBus socket
     let mut buffer = BytesMut::new();
     let mut fds = Vec::new();
@@ -45,7 +47,10 @@ pub async fn message_sink(mut message_receiver: UnboundedReceiver<Message>, mut 
 }
 
 /// The message stream task. This task takes messages, which were received from the DBus socket.
-pub async fn message_stream(mut stream: UnixStream, command_sender: UnboundedSender<Command>) {
+pub async fn message_stream<T>(mut stream: T, command_sender: UnboundedSender<Command>)
+where
+    T: AsyncReadExt + Unpin,
+{
     let mut buffer_msg = BytesMut::new();
     // Get the next Message received from the DBus socket
     let mut buffer: [u8; 128] = [0; 128];

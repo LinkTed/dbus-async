@@ -16,8 +16,6 @@ bitflags! {
     }
 }
 
-#[macro_use]
-mod helper;
 mod command;
 mod connection;
 mod dbus;
@@ -25,7 +23,10 @@ mod error;
 mod handler;
 mod introspect;
 mod message;
+mod server_address;
+mod stream;
 
 pub use dbus::DBus;
 pub use error::{DBusError, DBusResult};
 pub use handler::{Binder, Handler};
+pub use server_address::{ServerAddress, ServerAddressParseError};
