@@ -89,7 +89,7 @@ impl DBus {
     /// Send a `Message` without waiting for a response.
     pub fn send(&self, msg: Message) -> DBusResult<()> {
         // Try to send the message.
-        let command = Command::SendMessage(msg, None);
+        let command = Command::SendMessage(msg);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }
@@ -99,10 +99,23 @@ impl DBus {
         // Create a oneshot channel for the response
         let (msg_sender, msg_receiver) = channel::<Message>();
         // Try to send the message.
-        let command = Command::SendMessage(msg, Some(msg_sender));
+        let command = Command::SendMessageOneshot(msg, msg_sender);
         self.command_sender.unbounded_send(command)?;
         let msg = msg_receiver.await?;
         Ok(msg)
+    }
+
+    pub async fn call_reply_serial(
+        &self,
+        msg: Message,
+        msg_sender: MpscSender<Message>,
+    ) -> DBusResult<u32> {
+        let (reply_serial_sender, reply_serial_receiver) = channel::<u32>();
+        // Try to send the message.
+        let command = Command::SendMessageMpcs(msg, reply_serial_sender, msg_sender);
+        self.command_sender.unbounded_send(command)?;
+        let reply_serial = reply_serial_receiver.await?;
+        Ok(reply_serial)
     }
 
     /// Send the Hello `Message` and wait for the response.

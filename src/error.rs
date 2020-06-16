@@ -21,7 +21,9 @@ pub enum DBusError {
 impl From<TrySendError<Command>> for DBusError {
     fn from(e: TrySendError<Command>) -> Self {
         match e.into_inner() {
-            Command::SendMessage(msg, _) => DBusError::SendMessage(msg),
+            Command::SendMessage(msg) => DBusError::SendMessage(msg),
+            Command::SendMessageOneshot(msg, _) => DBusError::SendMessage(msg),
+            Command::SendMessageMpcs(msg, _, _) => DBusError::SendMessage(msg),
             Command::AddPath(object_path, _) => DBusError::AddPath(object_path),
             Command::DeletePath(object_path) => DBusError::DeletePath(Some(object_path)),
             Command::DeleteSender(_) => DBusError::DeletePath(None),

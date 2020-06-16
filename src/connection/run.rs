@@ -8,7 +8,13 @@ impl Connection {
         // Get the next command.
         while let Some(cmd) = self.command_receiver.next().await {
             match cmd {
-                Command::SendMessage(msg, response) => self.send_message(msg, response),
+                Command::SendMessage(msg) => self.send_message(msg),
+                Command::SendMessageOneshot(msg, response) => {
+                    self.send_message_oneshot(msg, response)
+                }
+                Command::SendMessageMpcs(msg, response_reply_serial, response) => {
+                    self.send_message_mpsc(msg, response_reply_serial, response)
+                }
                 Command::AddPath(path, object) => {
                     // Add the handler.
                     self.path_handler.insert(path, object);

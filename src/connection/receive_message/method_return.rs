@@ -1,4 +1,4 @@
-use super::super::connection::Connection;
+use super::super::connection::{Connection, MessageSender};
 use dbus_message_parser::Message;
 
 impl Connection {
@@ -9,11 +9,20 @@ impl Connection {
             // Try to get the response handler.
             if let Some(sender) = self.replies.pop(&serial) {
                 // Try to send it.
-                if let Err(e) = sender.send(msg) {
-                    error!("MethodReturn: sender.send: {:?}", e);
+                match sender {
+                    MessageSender::Oneshot(sender) => {
+                        if let Err(e) = sender.send(msg) {
+                            error!("oneshot.send: {:?}", e);
+                        }
+                    }
+                    MessageSender::Mpcs(mut sender) => {
+                        if let Err(e) = sender.try_send(msg) {
+                            error!("mpsc.try_send: {:?}", e);
+                        }
+                    }
                 }
             } else {
-                debug!("MethodReturn: UNHANDLED: {:?}", msg);
+                debug!("UNHANDLED: {:?}", msg);
             }
         }
     }

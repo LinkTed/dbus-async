@@ -6,7 +6,9 @@ use std::collections::HashSet;
 /// An enum representing all command the server task understands.
 #[derive(Debug)]
 pub enum Command {
-    SendMessage(Message, Option<OneshotSender<Message>>),
+    SendMessage(Message),
+    SendMessageOneshot(Message, OneshotSender<Message>),
+    SendMessageMpcs(Message, OneshotSender<u32>, MpscSender<Message>),
     AddPath(String, MpscSender<Message>),
     DeletePath(String),
     DeleteSender(MpscSender<Message>),
