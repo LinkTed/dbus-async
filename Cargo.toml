@@ -34,7 +34,7 @@ async-trait = "0.1.35"
 
 [dependencies.tokio]
 version = "0.2.21"
-features = ["uds", "io-util", "iovec", "rt-core", "macros", "time"]
+features = ["uds", "io-util"]
 
 [dependencies.tokio-util]
 version = "0.2.0"
@@ -42,4 +42,4 @@ features = ["codec"]
 
 [dev-dependencies.tokio]
 version = "0.2.21"
-features = ["uds", "rt-core", "macros"]
+features = ["rt-core", "macros"]

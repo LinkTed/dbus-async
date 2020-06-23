@@ -8,6 +8,20 @@ Add this to your `Cargo.toml`:
 dbus-async = "1.0"
 ```
 
+You have to specify, which Tokio Runtime should be used.
+* For multi-threaded add this to your `Cargo.toml`:
+  ```rust
+  [dependencies.tokio]
+  version = "0.2"
+  features = ["rt-threaded"] 
+  ```
+* For single-threaded add this to your `Cargo.toml`:
+  ```rust
+  [dependencies.tokio]
+  version = "0.2"
+  features = ["rt-core"] 
+  ```
+
 ## Example
 ```rust
 use dbus_async::DBus;
