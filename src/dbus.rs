@@ -75,7 +75,7 @@ impl DBus {
         let msg = dbus.call_hello().await?;
         if let MessageType::Error = msg.get_type() {
             let error = if let Some(error) = msg.get_error_name() {
-                error.as_ref()
+                error
             } else {
                 "no error name"
             };

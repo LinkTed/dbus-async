@@ -20,7 +20,7 @@ async fn introspect(dbus: DBus, mut receiver: Receiver<Message>) {
             continue;
         };
         // Check the member.
-        match member.as_ref() {
+        match member {
             "Introspect" => {
                 // Check if the signature of the message is correct.
                 if !msg.get_signature().is_empty() {

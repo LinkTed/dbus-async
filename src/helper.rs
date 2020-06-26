@@ -43,7 +43,7 @@ async fn connect(path: &str) -> IoResult<TokioUnixStream> {
 
     // Authentication was successful.
     stream.write_all(b"BEGIN\r\n").await?;
-    return Ok(stream);
+    Ok(stream)
 }
 
 /// Get the Unix Domain Stream socket by connection to the socket defined in the
@@ -86,6 +86,6 @@ pub fn split(unix_stream: TokioUnixStream) -> IoResult<(TokioUnixStream, TokioUn
         let sink = StdUnixStream::from_raw_fd(fd);
         let stream = unix_stream;
         let sink = TokioUnixStream::from_std(sink)?;
-        return Ok((stream, sink));
+        Ok((stream, sink))
     }
 }
