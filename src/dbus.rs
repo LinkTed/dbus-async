@@ -9,6 +9,7 @@ use dbus_message_parser::{Message, MessageType, Value};
 use futures::channel::mpsc::{unbounded, Sender as MpscSender, UnboundedSender};
 use futures::channel::oneshot::channel;
 use std::collections::HashSet;
+use std::convert::TryInto;
 use std::io::{Error as IoError, ErrorKind as IoErrorKind, Result as IoResult};
 use std::sync::Arc;
 use tokio::spawn;
@@ -121,10 +122,10 @@ impl DBus {
     /// Send the Hello `Message` and wait for the response.
     async fn call_hello(&self) -> DBusResult<Message> {
         let msg = Message::method_call(
-            "org.freedesktop.DBus",
-            "/org/freedesktop/DBus",
-            "org.freedesktop.DBus",
-            "Hello",
+            "org.freedesktop.DBus".try_into().unwrap(),
+            "/org/freedesktop/DBus".try_into().unwrap(),
+            "org.freedesktop.DBus".try_into().unwrap(),
+            "Hello".try_into().unwrap(),
         );
         self.call(msg).await
     }
@@ -133,10 +134,10 @@ impl DBus {
     /// This calls the `RequestName` method from the DBus daemon.
     pub async fn register_name(&self, name: String, flags: &DBusNameFlag) -> DBusResult<Message> {
         let mut msg = Message::method_call(
-            "org.freedesktop.DBus",
-            "/org/freedesktop/DBus",
-            "org.freedesktop.DBus",
-            "RequestName",
+            "org.freedesktop.DBus".try_into().unwrap(),
+            "/org/freedesktop/DBus".try_into().unwrap(),
+            "org.freedesktop.DBus".try_into().unwrap(),
+            "RequestName".try_into().unwrap(),
         );
         msg.add_value(Value::String(name));
         msg.add_value(Value::Uint32(flags.bits));

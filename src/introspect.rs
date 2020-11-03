@@ -20,11 +20,11 @@ async fn introspect(dbus: DBus, mut receiver: Receiver<Message>) {
             continue;
         };
         // Check the member.
-        match member {
+        match member.as_str() {
             "Introspect" => {
                 // Check if the signature of the message is correct.
                 if !msg.get_signature().is_empty() {
-                    let msg = msg.invalid_args("Too many arguments");
+                    let msg = msg.invalid_args("Too many arguments".to_string());
                     if let Err(e) = dbus.send(msg) {
                         error!("could not send message: {}", e);
                         return;
