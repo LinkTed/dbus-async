@@ -1,5 +1,7 @@
 # dbus-async
 A pure Rust written asynchronous DBus library.
+[![Latest version](https://img.shields.io/crates/v/dbus-async.svg)](https://crates.io/crates/dbus-async)
+[![License](https://img.shields.io/crates/l/dbus-async.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 ## Usage
 Add this to your `Cargo.toml`:
