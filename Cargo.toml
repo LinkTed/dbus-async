@@ -25,7 +25,7 @@ travis-ci = { repository = "LinkTed/doh-client" }
 log = "0.4.11"
 lazy_static = "1.4.0"
 futures = "0.3.7"
-dbus-message-parser = "3.0.0"
+dbus-message-parser = "3.0.1"
 hex = "0.4.2"
 bytes = "0.6.0"
 regex = "1.4.2"

@@ -30,7 +30,7 @@ async fn main() {
         .expect("Could not add match rule");
 
     // Initialize the object path
-    let object_path = "org/freedesktop/DBus".to_string();
+    let object_path = "org/freedesktop/DBus".try_into().unwrap();
 
     // Create a FIFO with a size of 1024
     let (sender, mut receiver) = channel::<Message>(1024);

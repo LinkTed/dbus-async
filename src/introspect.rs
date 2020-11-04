@@ -2,6 +2,7 @@ use crate::DBus;
 use dbus_message_parser::{Message, Value};
 use futures::channel::mpsc::{channel, Receiver};
 use futures::StreamExt;
+use std::convert::TryInto;
 use std::io::{Error as IoError, ErrorKind as IoErrorKind, Result as IoResult};
 use tokio::spawn;
 
@@ -33,7 +34,7 @@ async fn introspect(dbus: DBus, mut receiver: Receiver<Message>) {
                 }
                 // Get the path for which another peer wants to introspect.
                 if let Some(path) = msg.get_path() {
-                    match dbus.list_path(path).await {
+                    match dbus.list_method_call(path.clone()).await {
                         Ok(list) => {
                             // Create a return message.
                             let msg = match msg.method_return() {
@@ -79,9 +80,9 @@ async fn introspect(dbus: DBus, mut receiver: Receiver<Message>) {
 pub(super) fn add_introspect(dbus: DBus) -> IoResult<()> {
     // If introspectable is true then add the introspectable interface handler.
     let (sender, receiver) = channel(1024);
-    let interface = "org.freedesktop.DBus.Introspectable".to_string();
+    let interface = "org.freedesktop.DBus.Introspectable".try_into().unwrap();
     // Try to add the interface handler.
-    if let Err(e) = dbus.add_interface(interface, sender) {
+    if let Err(e) = dbus.add_method_call_interface(interface, sender) {
         error!("add_interface: {}", e);
         return Err(IoError::new(
             IoErrorKind::Other,

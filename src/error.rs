@@ -1,5 +1,5 @@
 use crate::command::Command;
-use dbus_message_parser::Message;
+use dbus_message_parser::{Interface, Message, ObjectPath};
 use futures::channel::mpsc::TrySendError;
 use futures::channel::oneshot::Canceled;
 use std::fmt::{Display, Formatter, Result as FmtResult};
@@ -8,13 +8,13 @@ use std::io::{Error as IoError, ErrorKind as IoErrorKind};
 #[derive(Debug)]
 pub enum DBusError {
     SendMessage(Message),
-    AddPath(String),
-    DeletePath(Option<String>),
-    ListPath(String),
-    AddInterface(String),
-    AddSignalHandler(String),
-    DeleteSignalHandler,
-    RecvMessage(Option<Message>),
+    AddMethodCall(ObjectPath),
+    DeleteMethodCall(Option<ObjectPath>),
+    ListMethodCall(ObjectPath),
+    AddMethodCallInterface(Interface),
+    AddSignal(ObjectPath),
+    DeleteSignal,
+    ReceiveMessage(Option<Message>),
     Close,
 }
 
@@ -24,17 +24,20 @@ impl From<TrySendError<Command>> for DBusError {
             Command::SendMessage(msg) => DBusError::SendMessage(msg),
             Command::SendMessageOneshot(msg, _) => DBusError::SendMessage(msg),
             Command::SendMessageMpcs(msg, _, _) => DBusError::SendMessage(msg),
-            Command::AddPath(object_path, _) => DBusError::AddPath(object_path),
-            Command::DeletePath(object_path) => DBusError::DeletePath(Some(object_path)),
-            Command::DeleteSender(_) => DBusError::DeletePath(None),
-            Command::DeleteReceiver(_) => DBusError::DeletePath(None),
-            Command::ListPath(object_path, _) => DBusError::ListPath(object_path),
-            Command::AddInterface(object_path, _) => DBusError::AddInterface(object_path),
-            Command::AddSignalHandler(object_path, _, _) => {
-                DBusError::AddSignalHandler(object_path)
+            Command::AddMethodCall(object_path, _) => DBusError::AddMethodCall(object_path),
+            Command::DeleteMethodCall(object_path) => {
+                DBusError::DeleteMethodCall(Some(object_path))
             }
-            Command::DeleteSignalHandler(_) => DBusError::DeleteSignalHandler,
-            Command::ReceiveMessage(msg) => DBusError::RecvMessage(Some(msg)),
+            Command::DeleteMethodCallSender(_) => DBusError::DeleteMethodCall(None),
+            Command::DeleteMethodCallReceiver(_) => DBusError::DeleteMethodCall(None),
+            Command::ListMethodCall(object_path, _) => DBusError::ListMethodCall(object_path),
+            Command::AddMethodCallInterface(object_path, _) => {
+                DBusError::AddMethodCallInterface(object_path)
+            }
+            Command::AddSignal(object_path, _, _) => DBusError::AddSignal(object_path),
+            Command::DeleteSignalSender(_) => DBusError::DeleteSignal,
+            Command::DeleteSignalReceiver(_) => DBusError::DeleteSignal,
+            Command::ReceiveMessage(msg) => DBusError::ReceiveMessage(Some(msg)),
             Command::Close => DBusError::Close,
         }
     }
@@ -42,7 +45,7 @@ impl From<TrySendError<Command>> for DBusError {
 
 impl From<Canceled> for DBusError {
     fn from(_: Canceled) -> Self {
-        DBusError::RecvMessage(None)
+        DBusError::ReceiveMessage(None)
     }
 }
 
@@ -56,17 +59,19 @@ impl Display for DBusError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             DBusError::SendMessage(msg) => write!(f, "Could not send message: {:?}", msg),
-            DBusError::AddPath(path) => write!(f, "Could not add object to path: {}", path),
-            DBusError::DeletePath(_object_path) => write!(f, "Could not delete object from path"),
-            DBusError::ListPath(path) => write!(f, "Could not list object of path: {}", path),
-            DBusError::AddInterface(interface) => {
+            DBusError::AddMethodCall(path) => write!(f, "Could not add object to path: {}", path),
+            DBusError::DeleteMethodCall(_object_path) => {
+                write!(f, "Could not delete object from path")
+            }
+            DBusError::ListMethodCall(path) => write!(f, "Could not list object of path: {}", path),
+            DBusError::AddMethodCallInterface(interface) => {
                 write!(f, "Could not add object to interface: {}", interface)
             }
-            DBusError::AddSignalHandler(path) => {
+            DBusError::AddSignal(path) => {
                 write!(f, "Could not add signal handler for path: {}", path)
             }
-            DBusError::DeleteSignalHandler => write!(f, "Could not delete signal handler"),
-            DBusError::RecvMessage(msg) => {
+            DBusError::DeleteSignal => write!(f, "Could not delete signal handler"),
+            DBusError::ReceiveMessage(msg) => {
                 write!(f, "Could not receive response for message: {:?}", msg)
             }
             DBusError::Close => write!(f, "Could not close DBus"),

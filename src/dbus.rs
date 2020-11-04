@@ -5,7 +5,7 @@ use crate::helper::{get_unix_socket, split};
 use crate::introspect::add_introspect;
 use crate::message::{message_sink, message_stream};
 use crate::DBusNameFlag;
-use dbus_message_parser::{Message, MessageType, Value};
+use dbus_message_parser::{Interface, Message, MessageType, ObjectPath, Value};
 use futures::channel::mpsc::{unbounded, Sender as MpscSender, UnboundedSender};
 use futures::channel::oneshot::channel;
 use std::collections::HashSet;
@@ -144,54 +144,58 @@ impl DBus {
         self.call(msg).await
     }
 
-    /// Add a `Handler` to a specific path.
-    pub fn add_object_path(
+    /// Add a channel to a specific object path.
+    pub fn add_method_call(
         &self,
-        object_path: String,
+        object_path: ObjectPath,
         sender: MpscSender<Message>,
     ) -> DBusResult<()> {
-        let command = Command::AddPath(object_path, sender);
+        let command = Command::AddMethodCall(object_path, sender);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }
 
-    /// Delete a object by path.
-    pub fn delete_object_path(&self, object_path: String) -> DBusResult<()> {
-        let command = Command::DeletePath(object_path);
+    /// Delete a channel by object path.
+    pub fn delete_object_path(&self, object_path: ObjectPath) -> DBusResult<()> {
+        let command = Command::DeleteMethodCall(object_path);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }
 
-    /// Delete a object by sender.
-    pub fn delete_sender(&self, sender: MpscSender<Message>) -> DBusResult<()> {
-        let command = Command::DeleteSender(sender);
+    /// Delete a channel by sender.
+    pub fn delete_method_call_sender(&self, sender: MpscSender<Message>) -> DBusResult<()> {
+        let command = Command::DeleteMethodCallSender(sender);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }
 
-    /// Add an interface `Handler`.
-    pub fn add_interface(&self, interface: String, sender: MpscSender<Message>) -> DBusResult<()> {
-        let command = Command::AddInterface(interface, sender);
+    /// Add a channel by interface.
+    pub fn add_method_call_interface(
+        &self,
+        interface: Interface,
+        sender: MpscSender<Message>,
+    ) -> DBusResult<()> {
+        let command = Command::AddMethodCallInterface(interface, sender);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }
 
-    /// Add a signal handler.
+    /// Add a channel for signal [`Message`].
     pub fn add_signal_handler(
         &self,
-        path: String,
+        object_path: ObjectPath,
         filter: Option<fn(&Message) -> bool>,
         sender: MpscSender<Message>,
     ) -> DBusResult<()> {
-        let command = Command::AddSignalHandler(path, filter, sender);
+        let command = Command::AddSignal(object_path, filter, sender);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }
 
     /// List all objects under a specific path.
-    pub async fn list_path(&self, path: &str) -> DBusResult<HashSet<String>> {
+    pub async fn list_method_call(&self, object_path: ObjectPath) -> DBusResult<HashSet<String>> {
         let (sender, receiver) = channel();
-        let command = Command::ListPath(path.to_string(), sender);
+        let command = Command::ListMethodCall(object_path, sender);
         self.command_sender.unbounded_send(command)?;
         let list = receiver.await?;
         Ok(list)

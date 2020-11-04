@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use dbus_async::{Binder, DBus, DBusResult, Handler};
 use dbus_message_parser::{Message, Value};
 use futures::lock::Mutex;
+use std::convert::TryInto;
 use std::sync::Arc;
 
 // This is a low level example, where the user defines the Handler trait by himself.
@@ -38,7 +39,7 @@ async fn main() {
     // Wrap the object with an Arc and a Mutex
     let mutex_dbus_object = Arc::new(Mutex::new(dbus_object));
     // The object path
-    let object_path = "/object/path";
+    let object_path = "/object/path".try_into().unwrap();
     // Bind the object to the dedicated object path
     mutex_dbus_object
         .bind(dbus, object_path)

@@ -8,7 +8,6 @@ impl Connection {
         if let Some(path) = msg.get_path() {
             // A valid `Signal` needs to have an `Interface` and a `Member`.
             if msg.has_interface() && msg.has_member() {
-                let path = path.to_string();
                 // Try to get the signal handler
                 if let Some(list) = self.signals.get_mut(&path) {
                     // Go through the list and try to send the signal.

@@ -2,6 +2,7 @@ use dbus_async::DBus;
 use dbus_message_parser::Message;
 use futures::channel::mpsc::channel;
 use futures::stream::StreamExt;
+use std::convert::TryInto;
 
 // This is a low level example, where the user create the channel to receive the message.
 
@@ -12,13 +13,13 @@ async fn main() {
         .expect("failed to get the DBus object");
 
     // Initialize the object path.
-    let object_path = "object/path/test".to_string();
+    let object_path = "/object/path/test".try_into().unwrap();
 
     // Create a FIFO with a size of 1024
     let (sender, mut receiver) = channel::<Message>(1024);
 
     // Register the object path
-    if let Err(e) = dbus.add_object_path(object_path, sender) {
+    if let Err(e) = dbus.add_method_call(object_path, sender) {
         panic!("Cannot add path: {:?}", e);
     }
 

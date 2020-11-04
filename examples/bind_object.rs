@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use dbus_async::{Binder, DBus, DBusResult, Handler};
 use dbus_message_parser::{Message, Value};
+use std::convert::TryInto;
 
 // This is a low level example, where the user defines the Handler trait by himself.
 
@@ -33,7 +34,7 @@ async fn main() {
     // Create a object, which implement the `Handle`
     let dbus_object = UserDefinedObject::new();
     // The object path
-    let object_path = "/object/path";
+    let object_path = "/object/path".try_into().unwrap();
     // Bind the object to the dedicated object path
     dbus_object
         .bind(dbus, object_path)

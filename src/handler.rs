@@ -1,6 +1,6 @@
 use crate::{DBus, DBusResult};
 use async_trait::async_trait;
-use dbus_message_parser::Message;
+use dbus_message_parser::{Message, ObjectPath};
 use futures::channel::mpsc::{channel, Receiver};
 use futures::lock::Mutex;
 use futures::StreamExt;
@@ -15,9 +15,9 @@ pub trait Handler: Sized + Send + Sync + 'static {
 
 #[async_trait]
 pub trait Binder: Sized + Send + Sync + 'static {
-    async fn bind(self, dbus: DBus, object_path: &str) -> DBusResult<()> {
+    async fn bind(self, dbus: DBus, object_path: ObjectPath) -> DBusResult<()> {
         let (sender, receiver) = channel(128);
-        dbus.add_object_path(object_path.to_string(), sender)?;
+        dbus.add_method_call(object_path, sender)?;
         self.bind_by_receiver(dbus, receiver).await
     }
 

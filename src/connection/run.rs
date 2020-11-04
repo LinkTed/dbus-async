@@ -15,29 +15,29 @@ impl Connection {
                 Command::SendMessageMpcs(msg, response_reply_serial, response) => {
                     self.send_message_mpsc(msg, response_reply_serial, response)
                 }
-                Command::AddPath(path, object) => {
+                Command::AddMethodCall(path, object) => {
                     // Add the handler.
-                    self.path_handler.insert(path, object);
+                    self.method_calls.insert(path, object);
                 }
-                Command::DeletePath(path) => {
+                Command::DeleteMethodCall(path) => {
                     // Remove the handler.
-                    self.path_handler.remove(&path);
+                    self.method_calls.remove(&path);
                 }
-                Command::DeleteSender(sender_other) => {
+                Command::DeleteMethodCallSender(sender_other) => {
                     // Remove the handler by `Sender<Message>` object.
-                    self.path_handler
+                    self.method_calls
                         .retain(|_path, sender| !sender_other.same_receiver(sender));
                 }
-                Command::DeleteReceiver(_receiver_other) => {
+                Command::DeleteMethodCallReceiver(_receiver_other) => {
                     // TODO: Wait until the is_connect PR is merged:
                     // https://github.com/rust-lang/futures-rs/pull/2179
                 }
-                Command::ListPath(path, sender) => self.list_path(&path, sender),
-                Command::AddInterface(interface, sender) => {
+                Command::ListMethodCall(path, sender) => self.list_path(&path, sender),
+                Command::AddMethodCallInterface(interface, sender) => {
                     // Add an interface handler
-                    self.interface_handler.insert(interface, sender);
+                    self.method_calls_interface.insert(interface, sender);
                 }
-                Command::AddSignalHandler(path, filter, sender) => {
+                Command::AddSignal(path, filter, sender) => {
                     // Add a signal handler.
                     if let Some(vec) = self.signals.get_mut(&path) {
                         vec.push((filter, sender));
@@ -45,13 +45,14 @@ impl Connection {
                         self.signals.insert(path, vec![(filter, sender)]);
                     }
                 }
-                Command::DeleteSignalHandler(sender_other) => {
+                Command::DeleteSignalSender(sender_other) => {
                     // Remove the signal handler by `Sender<Message>` object.
                     for vec_sender_message in self.signals.values_mut() {
                         vec_sender_message
                             .retain(|(_, sender)| !sender_other.same_receiver(sender));
                     }
                 }
+                Command::DeleteSignalReceiver(sender_other) => {}
                 Command::ReceiveMessage(msg) => self.receive_message(msg),
                 Command::Close => {
                     // Stop the server.

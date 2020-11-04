@@ -15,7 +15,7 @@ impl Connection {
         };
 
         let split_at = path_with_slash.len();
-        for p in self.path_handler.keys() {
+        for p in self.method_calls.keys() {
             if p.deref() == path {
                 continue;
             } else if p.starts_with(&path_with_slash) {
