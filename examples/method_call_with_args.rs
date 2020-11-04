@@ -1,5 +1,6 @@
 use dbus_async::DBus;
 use dbus_message_parser::{Message, Value};
+use std::convert::TryInto;
 
 #[tokio::main]
 async fn main() {
@@ -9,10 +10,10 @@ async fn main() {
 
     // Create a MethodCall
     let mut msg = Message::method_call(
-        "org.freedesktop.DBus",
-        "/org/freedesktop/DBus",
-        "org.freedesktop.DBus",
-        "AddMatch",
+        "org.freedesktop.DBus".try_into().unwrap(),
+        "/org/freedesktop/DBus".try_into().unwrap(),
+        "org.freedesktop.DBus".try_into().unwrap(),
+        "AddMatch".try_into().unwrap(),
     );
 
     // Add value as argument

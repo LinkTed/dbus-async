@@ -1,5 +1,6 @@
 use dbus_async::DBus;
 use dbus_message_parser::Message;
+use std::convert::TryInto;
 
 #[tokio::main]
 async fn main() {
@@ -9,10 +10,10 @@ async fn main() {
 
     // Now we have a DBus object, so create a message
     let msg = Message::method_call(
-        "org.freedesktop.DBus",
-        "/org/freedesktop/DBus",
-        "org.freedesktop.DBus.Peer",
-        "Ping",
+        "org.freedesktop.DBus".try_into().unwrap(),
+        "/org/freedesktop/DBus".try_into().unwrap(),
+        "org.freedesktop.DBus.Peer".try_into().unwrap(),
+        "Ping".try_into().unwrap(),
     );
 
     // Send the message

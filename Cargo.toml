@@ -38,4 +38,4 @@ features = ["net", "io-util"]
 
 [dev-dependencies.tokio]
 version = "0.3.3"
-features = ["rt", "macros"]
+features = ["rt-multi-thread", "macros"]

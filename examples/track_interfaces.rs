@@ -2,13 +2,14 @@ use dbus_async::DBus;
 use dbus_message_parser::{Message, MessageType, Value};
 use futures::channel::mpsc::{channel, Sender};
 use futures::stream::StreamExt;
+use std::convert::TryInto;
 
 async fn register_signal(dbus: &DBus, sender: Sender<Message>) {
     let mut msg_add_match = Message::method_call(
-        "org.freedesktop.DBus",
-        "/org/freedesktop/DBus",
-        "org.freedesktop.DBus",
-        "AddMatch",
+        "org.freedesktop.DBus".try_into().unwrap(),
+        "/org/freedesktop/DBus".try_into().unwrap(),
+        "org.freedesktop.DBus".try_into().unwrap(),
+        "AddMatch".try_into().unwrap(),
     );
     msg_add_match.add_value(Value::String(
         "type='signal',sender='org.example.sender',\
@@ -20,10 +21,10 @@ async fn register_signal(dbus: &DBus, sender: Sender<Message>) {
         .expect("Could not add match rule");
 
     let mut msg_add_match = Message::method_call(
-        "org.freedesktop.DBus",
-        "/org/freedesktop/DBus",
-        "org.freedesktop.DBus",
-        "AddMatch",
+        "org.freedesktop.DBus".try_into().unwrap(),
+        "/org/freedesktop/DBus".try_into().unwrap(),
+        "org.freedesktop.DBus".try_into().unwrap(),
+        "AddMatch".try_into().unwrap(),
     );
     msg_add_match.add_value(Value::String(
         "type='signal',sender='org.example.sender',\
@@ -35,13 +36,12 @@ async fn register_signal(dbus: &DBus, sender: Sender<Message>) {
         .expect("Could not add match rule");
 
     // Register the object path
-    dbus.add_signal_handler("/".to_string(), sender)
+    dbus.add_signal_handler("/".to_string(), None, sender)
         .expect("Could not register signal");
 }
 
 // This is a low level example, where the user create the channel to receive signals from specific
 // peer.
-
 #[tokio::main]
 async fn main() {
     let (dbus, _connection_handle) = DBus::session(true)
@@ -54,10 +54,10 @@ async fn main() {
     register_signal(&dbus, sender.clone()).await;
 
     let msg = Message::method_call(
-        "org.example.sender",
-        "/",
-        "org.freedesktop.DBus.ObjectManager",
-        "GetManagedObjects",
+        "org.example.sender".try_into().unwrap(),
+        "/".try_into().unwrap(),
+        "org.freedesktop.DBus.ObjectManager".try_into().unwrap(),
+        "GetManagedObjects".try_into().unwrap(),
     );
 
     let reply_serial = dbus
