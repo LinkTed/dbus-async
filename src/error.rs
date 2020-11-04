@@ -30,7 +30,9 @@ impl From<TrySendError<Command>> for DBusError {
             Command::DeleteReceiver(_) => DBusError::DeletePath(None),
             Command::ListPath(object_path, _) => DBusError::ListPath(object_path),
             Command::AddInterface(object_path, _) => DBusError::AddInterface(object_path),
-            Command::AddSignalHandler(object_path, _) => DBusError::AddSignalHandler(object_path),
+            Command::AddSignalHandler(object_path, _, _) => {
+                DBusError::AddSignalHandler(object_path)
+            }
             Command::DeleteSignalHandler(_) => DBusError::DeleteSignalHandler,
             Command::ReceiveMessage(msg) => DBusError::RecvMessage(Some(msg)),
             Command::Close => DBusError::Close,

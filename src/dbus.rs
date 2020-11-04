@@ -16,7 +16,7 @@ use tokio::spawn;
 use tokio::task::JoinHandle;
 
 /// This struct represents an object to communicate with the DBus daemon.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct DBus {
     command_sender: UnboundedSender<Command>,
     socket_path: Arc<String>,
@@ -177,8 +177,13 @@ impl DBus {
     }
 
     /// Add a signal handler.
-    pub fn add_signal_handler(&self, path: String, sender: MpscSender<Message>) -> DBusResult<()> {
-        let command = Command::AddSignalHandler(path, sender);
+    pub fn add_signal_handler(
+        &self,
+        path: String,
+        filter: Option<fn(&Message) -> bool>,
+        sender: MpscSender<Message>,
+    ) -> DBusResult<()> {
+        let command = Command::AddSignalHandler(path, filter, sender);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }

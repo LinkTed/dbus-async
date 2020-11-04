@@ -13,7 +13,7 @@ pub(crate) enum MessageSender {
 pub(crate) struct Connection {
     pub(super) serial: u32,
     pub(super) replies: LruCache<u32, MessageSender>,
-    pub(super) signals: HashMap<String, Vec<MpscSender<Message>>>,
+    pub(super) signals: HashMap<String, Vec<(Option<fn(&Message) -> bool>, MpscSender<Message>)>>,
     pub(super) path_handler: HashMap<String, MpscSender<Message>>,
     pub(super) interface_handler: HashMap<String, MpscSender<Message>>,
     pub(super) command_receiver: UnboundedReceiver<Command>,

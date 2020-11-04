@@ -4,7 +4,6 @@ use futures::channel::oneshot::Sender as OneshotSender;
 use std::collections::HashSet;
 
 /// An enum representing all command the server task understands.
-#[derive(Debug)]
 pub enum Command {
     SendMessage(Message),
     SendMessageOneshot(Message, OneshotSender<Message>),
@@ -15,7 +14,7 @@ pub enum Command {
     DeleteReceiver(MpscReceiver<Message>),
     ListPath(String, OneshotSender<HashSet<String>>),
     AddInterface(String, MpscSender<Message>),
-    AddSignalHandler(String, MpscSender<Message>),
+    AddSignalHandler(String, Option<fn(&Message) -> bool>, MpscSender<Message>),
     DeleteSignalHandler(MpscSender<Message>),
     ReceiveMessage(Message),
     Close,

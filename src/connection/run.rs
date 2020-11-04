@@ -37,18 +37,19 @@ impl Connection {
                     // Add an interface handler
                     self.interface_handler.insert(interface, sender);
                 }
-                Command::AddSignalHandler(path, sender) => {
+                Command::AddSignalHandler(path, filter, sender) => {
                     // Add a signal handler.
                     if let Some(vec) = self.signals.get_mut(&path) {
-                        vec.push(sender);
+                        vec.push((filter, sender));
                     } else {
-                        self.signals.insert(path, vec![sender]);
+                        self.signals.insert(path, vec![(filter, sender)]);
                     }
                 }
                 Command::DeleteSignalHandler(sender_other) => {
                     // Remove the signal handler by `Sender<Message>` object.
                     for vec_sender_message in self.signals.values_mut() {
-                        vec_sender_message.retain(|sender| !sender_other.same_receiver(sender));
+                        vec_sender_message
+                            .retain(|(_, sender)| !sender_other.same_receiver(sender));
                     }
                 }
                 Command::ReceiveMessage(msg) => self.receive_message(msg),
