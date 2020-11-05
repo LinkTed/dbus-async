@@ -14,6 +14,9 @@ pub enum Command {
     DeleteMethodCallReceiver(MpscReceiver<Message>),
     ListMethodCall(ObjectPath, OneshotSender<HashSet<String>>),
     AddMethodCallInterface(Interface, MpscSender<Message>),
+    DeleteMethodCallInterface(Interface),
+    DeleteMethodCallInterfaceSender(MpscSender<Message>),
+    DeleteMethodCallInterfaceReceiver(MpscReceiver<Message>),
     AddSignal(
         ObjectPath,
         Option<fn(&Message) -> bool>,

@@ -36,7 +36,7 @@ async fn register_signal(dbus: &DBus, sender: Sender<Message>) {
         .expect("Could not add match rule");
 
     // Register the object path
-    dbus.add_signal_handler("/".try_into().unwrap(), None, sender)
+    dbus.add_signal("/".try_into().unwrap(), None, sender)
         .expect("Could not register signal");
 }
 

@@ -8,6 +8,7 @@ impl Connection {
         // Get the next command.
         while let Some(cmd) = self.command_receiver.next().await {
             match cmd {
+                Command::ReceiveMessage(msg) => self.receive_message(msg),
                 Command::SendMessage(msg) => self.send_message(msg),
                 Command::SendMessageOneshot(msg, response) => {
                     self.send_message_oneshot(msg, response)
@@ -15,34 +16,49 @@ impl Connection {
                 Command::SendMessageMpcs(msg, response_reply_serial, response) => {
                     self.send_message_mpsc(msg, response_reply_serial, response)
                 }
-                Command::AddMethodCall(path, object) => {
+                Command::AddMethodCall(object_path, object) => {
                     // Add the handler.
-                    self.method_calls.insert(path, object);
+                    self.method_calls.insert(object_path, object);
                 }
-                Command::DeleteMethodCall(path) => {
+                Command::DeleteMethodCall(object_path) => {
                     // Remove the handler.
-                    self.method_calls.remove(&path);
+                    self.method_calls.remove(&object_path);
                 }
                 Command::DeleteMethodCallSender(sender_other) => {
                     // Remove the handler by `Sender<Message>` object.
                     self.method_calls
-                        .retain(|_path, sender| !sender_other.same_receiver(sender));
+                        .retain(|_, sender| !sender_other.same_receiver(sender));
                 }
-                Command::DeleteMethodCallReceiver(_receiver_other) => {
-                    // TODO: Wait until the is_connect PR is merged:
-                    // https://github.com/rust-lang/futures-rs/pull/2179
+                Command::DeleteMethodCallReceiver(receiver) => {
+                    self.method_calls
+                        .retain(|_, sender| !sender.is_connected_to(&receiver));
                 }
-                Command::ListMethodCall(path, sender) => self.list_path(&path, sender),
+                Command::ListMethodCall(object_path, sender) => {
+                    self.list_path(&object_path, sender)
+                }
                 Command::AddMethodCallInterface(interface, sender) => {
                     // Add an interface handler
                     self.method_calls_interface.insert(interface, sender);
                 }
-                Command::AddSignal(path, filter, sender) => {
+                Command::DeleteMethodCallInterface(interface) => {
+                    self.method_calls_interface.remove(&interface);
+                }
+                Command::DeleteMethodCallInterfaceSender(sender_other) => {
+                    // Remove the handler by `Sender<Message>` object.
+                    self.method_calls_interface
+                        .retain(|_, sender| !sender_other.same_receiver(sender));
+                }
+                Command::DeleteMethodCallInterfaceReceiver(receiver) => {
+                    // Remove the handler by `Sender<Message>` object.
+                    self.method_calls_interface
+                        .retain(|_, sender| !sender.is_connected_to(&receiver));
+                }
+                Command::AddSignal(object_path, filter, sender) => {
                     // Add a signal handler.
-                    if let Some(vec) = self.signals.get_mut(&path) {
+                    if let Some(vec) = self.signals.get_mut(&object_path) {
                         vec.push((filter, sender));
                     } else {
-                        self.signals.insert(path, vec![(filter, sender)]);
+                        self.signals.insert(object_path, vec![(filter, sender)]);
                     }
                 }
                 Command::DeleteSignalSender(sender_other) => {
@@ -52,8 +68,11 @@ impl Connection {
                             .retain(|(_, sender)| !sender_other.same_receiver(sender));
                     }
                 }
-                Command::DeleteSignalReceiver(sender_other) => {}
-                Command::ReceiveMessage(msg) => self.receive_message(msg),
+                Command::DeleteSignalReceiver(receiver) => {
+                    for vec_sender_message in self.signals.values_mut() {
+                        vec_sender_message.retain(|(_, sender)| !sender.is_connected_to(&receiver));
+                    }
+                }
                 Command::Close => {
                     // Stop the server.
                     return;

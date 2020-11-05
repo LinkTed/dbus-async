@@ -36,7 +36,7 @@ async fn main() {
     let (sender, mut receiver) = channel::<Message>(1024);
 
     // Register the object path
-    if let Err(e) = dbus.add_signal_handler(object_path, None, sender) {
+    if let Err(e) = dbus.add_signal(object_path, None, sender) {
         panic!("Cannot add path: {:?}", e);
     }
 

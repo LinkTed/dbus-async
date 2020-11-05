@@ -12,6 +12,7 @@ pub enum DBusError {
     DeleteMethodCall(Option<ObjectPath>),
     ListMethodCall(ObjectPath),
     AddMethodCallInterface(Interface),
+    DeleteMethodCallInterface(Option<Interface>),
     AddSignal(ObjectPath),
     DeleteSignal,
     ReceiveMessage(Option<Message>),
@@ -33,6 +34,15 @@ impl From<TrySendError<Command>> for DBusError {
             Command::ListMethodCall(object_path, _) => DBusError::ListMethodCall(object_path),
             Command::AddMethodCallInterface(object_path, _) => {
                 DBusError::AddMethodCallInterface(object_path)
+            }
+            Command::DeleteMethodCallInterface(interface) => {
+                DBusError::DeleteMethodCallInterface(Some(interface))
+            }
+            Command::DeleteMethodCallInterfaceSender(_) => {
+                DBusError::DeleteMethodCallInterface(None)
+            }
+            Command::DeleteMethodCallInterfaceReceiver(_) => {
+                DBusError::DeleteMethodCallInterface(None)
             }
             Command::AddSignal(object_path, _, _) => DBusError::AddSignal(object_path),
             Command::DeleteSignalSender(_) => DBusError::DeleteSignal,
@@ -59,18 +69,33 @@ impl Display for DBusError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             DBusError::SendMessage(msg) => write!(f, "Could not send message: {:?}", msg),
-            DBusError::AddMethodCall(path) => write!(f, "Could not add object to path: {}", path),
-            DBusError::DeleteMethodCall(_object_path) => {
-                write!(f, "Could not delete object from path")
+            DBusError::AddMethodCall(object_path) => {
+                write!(f, "Could not add channel for method call: {}", object_path)
             }
-            DBusError::ListMethodCall(path) => write!(f, "Could not list object of path: {}", path),
-            DBusError::AddMethodCallInterface(interface) => {
-                write!(f, "Could not add object to interface: {}", interface)
+            DBusError::DeleteMethodCall(object_path) => {
+                write!(f, "Could not delete channel for method call")?;
+                if let Some(object_path) = object_path {
+                    write!(f, ": {}", object_path)
+                } else {
+                    Ok(())
+                }
             }
-            DBusError::AddSignal(path) => {
-                write!(f, "Could not add signal handler for path: {}", path)
+            DBusError::ListMethodCall(path) => write!(f, "Could not list method call: {}", path),
+            DBusError::AddMethodCallInterface(interface) => write!(
+                f,
+                "Could not add chanell for method call(interface): {}",
+                interface
+            ),
+            DBusError::DeleteMethodCallInterface(interface) => {
+                write!(f, "Could not delete channel for method call(interface)")?;
+                if let Some(interface) = interface {
+                    write!(f, ": {}", interface)
+                } else {
+                    Ok(())
+                }
             }
-            DBusError::DeleteSignal => write!(f, "Could not delete signal handler"),
+            DBusError::AddSignal(path) => write!(f, "Could not add channel for signals: {}", path),
+            DBusError::DeleteSignal => write!(f, "Could not delete channel for signals"),
             DBusError::ReceiveMessage(msg) => {
                 write!(f, "Could not receive response for message: {:?}", msg)
             }

@@ -6,7 +6,9 @@ use crate::introspect::add_introspect;
 use crate::message::{message_sink, message_stream};
 use crate::DBusNameFlag;
 use dbus_message_parser::{Interface, Message, MessageType, ObjectPath, Value};
-use futures::channel::mpsc::{unbounded, Sender as MpscSender, UnboundedSender};
+use futures::channel::mpsc::{
+    unbounded, Receiver as MpscReceiver, Sender as MpscSender, UnboundedSender,
+};
 use futures::channel::oneshot::channel;
 use std::collections::HashSet;
 use std::convert::TryInto;
@@ -195,12 +197,23 @@ impl DBus {
         Ok(())
     }
 
-    /// Delete the channel for every [`ObjectPath`], which the given channel is connected to
+    /// Delete the channel for every [`ObjectPath`], which the given sender is connected to
     /// (see [`add_method_call`]).
     ///
     /// [`add_method_call`]: #method.add_method_call
     pub fn delete_method_call_sender(&self, sender: MpscSender<Message>) -> DBusResult<()> {
         let command = Command::DeleteMethodCallSender(sender);
+        self.command_sender.unbounded_send(command)?;
+        Ok(())
+    }
+
+    /// Delete the channel for every [`ObjectPath`], which the given sender is connected to
+    /// (see [`add_method_call`]).
+    ///
+    /// [`add_method_call`]: #method.add_method_call
+    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    pub fn delete_method_call_receiver(&self, receiver: MpscReceiver<Message>) -> DBusResult<()> {
+        let command = Command::DeleteMethodCallReceiver(receiver);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }
@@ -225,20 +238,74 @@ impl DBus {
         Ok(())
     }
 
+    /// Delete the channel for every [`Interface`], which the given sender is connected to
+    /// (see [`add_method_call_interface`]).
+    ///
+    /// [`add_method_call_interface`]: #method.add_method_call_interface
+    /// [`Interface`]: dbus_message_parser::Interface
+    pub fn delete_method_call_interface_sender(
+        &self,
+        sender: MpscSender<Message>,
+    ) -> DBusResult<()> {
+        let command = Command::DeleteMethodCallInterfaceSender(sender);
+        self.command_sender.unbounded_send(command)?;
+        Ok(())
+    }
+
+    /// Delete the channel for every [`Interface`], which the given sender is connected to
+    /// (see [`add_method_call_interface`]).
+    ///
+    /// [`add_method_call_interface`]: #method.add_method_call_interface
+    /// [`Interface`]: dbus_message_parser::Interface
+    pub fn delete_method_call_interface_receiver(
+        &self,
+        receiver: MpscReceiver<Message>,
+    ) -> DBusResult<()> {
+        let command = Command::DeleteMethodCallInterfaceReceiver(receiver);
+        self.command_sender.unbounded_send(command)?;
+        Ok(())
+    }
+
     /// Add a channel to a specific [`ObjectPath`].
     ///
-    /// The channel will receive all `Signal`messages for the specified [`ObjectPath`].
+    /// The channel will receive all `Signal` messages for the specified [`ObjectPath`].
+    ///
+    /// The second argument specify a closure to filter the [`Message`]. If the closure returns true
+    /// then the [`Message`] will not be send to the channel.
     ///
     /// There can be multiple channels, which will receive message of the specific [`ObjectPath`].
     ///
+    /// [`Message`]: dbus_message_parser::Message
     /// [`ObjectPath`]: dbus_message_parser::ObjectPath
-    pub fn add_signal_handler(
+    pub fn add_signal(
         &self,
         object_path: ObjectPath,
         filter: Option<fn(&Message) -> bool>,
         sender: MpscSender<Message>,
     ) -> DBusResult<()> {
         let command = Command::AddSignal(object_path, filter, sender);
+        self.command_sender.unbounded_send(command)?;
+        Ok(())
+    }
+
+    /// Delete the channel for every [`ObjectPath`], which the given sender is connected to
+    /// (see [`add_signal`]).
+    ///
+    /// [`add_signal`]: #method.add_signal
+    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    pub fn delete_signal_sender(&self, sender: MpscSender<Message>) -> DBusResult<()> {
+        let command = Command::DeleteSignalSender(sender);
+        self.command_sender.unbounded_send(command)?;
+        Ok(())
+    }
+
+    /// Delete the channel for every [`ObjectPath`], which the given sender is connected to
+    /// (see [`add_signal`]).
+    ///
+    /// [`add_signal`]: #method.add_signal
+    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    pub fn delete_signal_receiver(&self, receiver: MpscReceiver<Message>) -> DBusResult<()> {
+        let command = Command::DeleteSignalReceiver(receiver);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }
