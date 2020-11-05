@@ -24,6 +24,10 @@ pub struct DBus {
 
 impl DBus {
     /// Connect to the session DBus.
+    ///
+    /// If the first argument (`introspectable`) is `true` then the Peer is introspectable.
+    ///
+    /// The `DBUS_SESSION_BUS_ADDRESS` environment variable **have to** be defined.
     pub async fn session(introspectable: bool) -> IoResult<(DBus, JoinHandle<()>)> {
         if let Some(path) = option_env!("DBUS_SESSION_BUS_ADDRESS") {
             DBus::new(path, introspectable).await
@@ -37,6 +41,11 @@ impl DBus {
     }
 
     /// Connect to the system DBus.
+    ///
+    /// If the first argument (`introspectable`) is `true` then the Peer is introspectable.
+    ///
+    /// If there `DBUS_SYSTEM_BUS_ADDRESS` environment variable is defined then this path will be
+    /// used, else `unix:path=/var/run/dbus/system_bus_socket`.
     pub async fn system(introspectable: bool) -> IoResult<(DBus, JoinHandle<()>)> {
         let path = if let Some(path) = option_env!("DBUS_SYSTEM_BUS_ADDRESS") {
             path
@@ -46,7 +55,9 @@ impl DBus {
         DBus::new(path, introspectable).await
     }
 
-    /// Create a DBus object. You can choose in the second argument that the Peer is introspectable.
+    /// Connect to the specific (`path`) DBus daemon.
+    ///
+    /// If the second argument (`introspectable`) is `true` then the Peer is introspectable.
     pub async fn new(path: &str, introspectable: bool) -> IoResult<(DBus, JoinHandle<()>)> {
         // Create all necessary channels.
         let (command_sender, command_receiver) = unbounded::<Command>();
@@ -87,7 +98,7 @@ impl DBus {
         }
     }
 
-    /// Send a `Message` without waiting for a response.
+    /// Send a [`Message`](dbus_message_parser::Message).
     pub fn send(&self, msg: Message) -> DBusResult<()> {
         // Try to send the message.
         let command = Command::SendMessage(msg);
@@ -95,7 +106,11 @@ impl DBus {
         Ok(())
     }
 
-    /// Send a `Message` with waiting for a response.
+    /// Send a [`Message`] and wait for a response.
+    ///
+    /// The [`Message`] have to be a `MessageCall`.
+    ///
+    /// [`Message`]: dbus_message_parser::Message
     pub async fn call(&self, msg: Message) -> DBusResult<Message> {
         // Create a oneshot channel for the response
         let (msg_sender, msg_receiver) = channel::<Message>();
@@ -106,6 +121,12 @@ impl DBus {
         Ok(msg)
     }
 
+    /// Send a [`Message`] and specify a channel, where the response should be send.
+    ///
+    /// This function returns the serial number of the [`Message`]. This is useful, where the the
+    /// response and signals have to be processed in order.
+    ///
+    /// [`Message`]: dbus_message_parser::Message
     pub async fn call_reply_serial(
         &self,
         msg: Message,
@@ -119,7 +140,7 @@ impl DBus {
         Ok(reply_serial)
     }
 
-    /// Send the Hello `Message` and wait for the response.
+    /// Call the `Hello()` method of the DBus daemon.
     async fn call_hello(&self) -> DBusResult<Message> {
         let msg = Message::method_call(
             "org.freedesktop.DBus".try_into().unwrap(),
@@ -130,8 +151,8 @@ impl DBus {
         self.call(msg).await
     }
 
-    /// Register a name for the peer.
-    /// This calls the `RequestName` method from the DBus daemon.
+    /// Register a name for the peer. This calls the `RequestName(String, UInt32)` method of the
+    /// DBus daemon.
     pub async fn register_name(&self, name: String, flags: &DBusNameFlag) -> DBusResult<Message> {
         let mut msg = Message::method_call(
             "org.freedesktop.DBus".try_into().unwrap(),
@@ -144,7 +165,14 @@ impl DBus {
         self.call(msg).await
     }
 
-    /// Add a channel to a specific object path.
+    /// Add a channel to a specific [`ObjectPath`].
+    ///
+    /// The channel will receive all `MethodCall` messages for the specified [`ObjectPath`].
+    ///
+    /// If there is already channel added for this [`ObjectPath`] then it will be replace. So the
+    /// old channel will not receive any `MethodCall` messages for the [`ObjectPath`] anymore.
+    ///
+    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
     pub fn add_method_call(
         &self,
         object_path: ObjectPath,
@@ -155,21 +183,38 @@ impl DBus {
         Ok(())
     }
 
-    /// Delete a channel by object path.
+    /// Delete the channel for a specific [`ObjectPath`] (see [`add_method_call`]).
+    ///
+    /// Even if there is no channel for this [`ObjectPath`] the function will return `Ok()`.
+    ///
+    /// [`add_method_call`]: #method.add_method_call
+    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
     pub fn delete_object_path(&self, object_path: ObjectPath) -> DBusResult<()> {
         let command = Command::DeleteMethodCall(object_path);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }
 
-    /// Delete a channel by sender.
+    /// Delete the channel for every [`ObjectPath`], which the given channel is connected to
+    /// (see [`add_method_call`]).
+    ///
+    /// [`add_method_call`]: #method.add_method_call
     pub fn delete_method_call_sender(&self, sender: MpscSender<Message>) -> DBusResult<()> {
         let command = Command::DeleteMethodCallSender(sender);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }
 
-    /// Add a channel by interface.
+    /// Add a channel to a specific [`Interface`].
+    ///
+    /// The channel will **only** receive all `MethodCall` messages for the specified [`Interface`],
+    /// if there is no channel by the [`ObjectPath`].
+    ///
+    /// If there is already channel added for this [`Interface`] then it will be replace. So the old
+    /// channel will not receive any `MethodCall` messages for the [`Interface`] anymore.
+    ///
+    /// [`Interface`]: dbus_message_parser::Interface
+    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
     pub fn add_method_call_interface(
         &self,
         interface: Interface,
@@ -180,7 +225,13 @@ impl DBus {
         Ok(())
     }
 
-    /// Add a channel for signal [`Message`].
+    /// Add a channel to a specific [`ObjectPath`].
+    ///
+    /// The channel will receive all `Signal`messages for the specified [`ObjectPath`].
+    ///
+    /// There can be multiple channels, which will receive message of the specific [`ObjectPath`].
+    ///
+    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
     pub fn add_signal_handler(
         &self,
         object_path: ObjectPath,
@@ -192,7 +243,13 @@ impl DBus {
         Ok(())
     }
 
-    /// List all objects under a specific path.
+    /// List all [`ObjectPath`]s under the given [`ObjectPath`].
+    ///
+    /// This will only list the [`ObjectPath`] for the `MethodCall` messages
+    /// (see [`add_method_call`]).
+    ///
+    /// [`add_method_call`]: #method.add_method_call
+    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
     pub async fn list_method_call(&self, object_path: ObjectPath) -> DBusResult<HashSet<String>> {
         let (sender, receiver) = channel();
         let command = Command::ListMethodCall(object_path, sender);
@@ -201,13 +258,13 @@ impl DBus {
         Ok(list)
     }
 
-    /// Close the DBus object.
+    /// Close the DBus connection.
     pub fn close(&self) -> DBusResult<()> {
         self.command_sender.unbounded_send(Command::Close)?;
         Ok(())
     }
 
-    /// The current path of the DBus socket.
+    /// Get the current path of the DBus daemon.
     pub fn get_socket_path(&self) -> &str {
         self.socket_path.as_ref()
     }
