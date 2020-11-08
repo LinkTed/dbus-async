@@ -153,7 +153,7 @@ impl DBus {
             "RequestName".try_into().unwrap(),
         );
         msg.add_value(Value::String(name));
-        msg.add_value(Value::Uint32(flags.bits));
+        msg.add_value(Value::Uint32(flags.bits()));
         self.call(msg).await
     }
 
