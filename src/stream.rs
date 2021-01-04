@@ -1,6 +1,6 @@
 use crate::command::Command;
 use crate::message::{message_sink, message_stream};
-use crate::{ServerAddress, ServerAddressParseError};
+use crate::{ClientAddress, ClientAddressDecodeError};
 use dbus_message_parser::message::Message;
 use futures::channel::mpsc::{unbounded, UnboundedSender};
 use hex::encode;
@@ -64,13 +64,11 @@ pub enum Stream {
 #[derive(Debug, Error)]
 pub enum StreamError {
     #[error("Could not parse address: {0}")]
-    ServerAddressParseError(#[from] ServerAddressParseError),
+    ServerAddressParseError(#[from] ClientAddressDecodeError),
     #[error("IO error: {0}")]
     IoError(#[from] IoError),
     #[error("Unix abstract is not yet supported")]
     UnixAbstractIsNotSupported,
-    #[error("Unix runtime is not yes supported")]
-    UnixRuntimeIsNotSupported,
     #[error("Could not connect to any address")]
     CouldNotConnectToAnyAddress,
     #[error("Got the following response from daemon: {0}")]
@@ -80,16 +78,15 @@ pub enum StreamError {
 }
 
 impl Stream {
-    async fn connect(address: &ServerAddress) -> Result<Stream, StreamError> {
+    async fn connect(address: &ClientAddress) -> Result<Stream, StreamError> {
         match address {
-            ServerAddress::UnixPath(path) => {
+            ClientAddress::UnixPath(path) => {
                 let mut connection = UnixStream::connect(path).await?;
                 handshake(&mut connection).await?;
                 Ok(Stream::Unix(connection))
             }
-            ServerAddress::UnixAbstract(_) => Err(StreamError::UnixAbstractIsNotSupported),
-            ServerAddress::UnixRuntime => Err(StreamError::UnixRuntimeIsNotSupported),
-            ServerAddress::Tcp(socket_address) => {
+            ClientAddress::UnixAbstract(_) => Err(StreamError::UnixAbstractIsNotSupported),
+            ClientAddress::Tcp(socket_address) => {
                 let mut connection = TcpStream::connect(socket_address).await?;
                 handshake(&mut connection).await?;
                 Ok(Stream::Tcp(connection))
@@ -99,8 +96,8 @@ impl Stream {
 
     /// Get the Unix Domain Stream socket by connection to the socket defined in the
     /// `DBUS_SESSION_BUS_ADDRESS` environment variable.
-    pub async fn new(addressses: &str) -> Result<(ServerAddress, Stream), StreamError> {
-        let addressses = ServerAddress::parse(addressses)?;
+    pub async fn new(addressses: &str) -> Result<(ClientAddress, Stream), StreamError> {
+        let addressses = ClientAddress::decode(addressses)?;
         for address in addressses.iter() {
             match Stream::connect(address).await {
                 Ok(connect) => return Ok((address.clone(), connect)),

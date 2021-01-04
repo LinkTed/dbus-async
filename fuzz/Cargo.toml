@@ -1,0 +1,22 @@
+[package]
+name = "fuzz"
+version = "0.1.0"
+authors = ["LinkTed <link.ted@mailbox.org>"]
+edition = "2018"
+
+[dependencies]
+bytes = "~1.0"
+honggfuzz = "~0.5.51"
+
+[dependencies.dbus-async]
+path = ".."
+
+[dependencies.tokio]
+version = "~1.0.1"
+features = ["rt-multi-thread", "macros"]
+
+[[bin]]
+name = "decode_encode_decode"
+path = "src/decode_encode_decode.rs"
+test = false
+doc = false
