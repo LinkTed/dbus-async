@@ -87,7 +87,7 @@ impl DBus {
         }
     }
 
-    /// Send a [`Message`](dbus_message_parser::Message).
+    /// Send a [`Message`](dbus_message_parser::message::Message).
     pub fn send(&self, msg: Message) -> DBusResult<()> {
         // Try to send the message.
         let command = Command::SendMessage(msg);
@@ -99,7 +99,7 @@ impl DBus {
     ///
     /// The [`Message`] have to be a `MessageCall`.
     ///
-    /// [`Message`]: dbus_message_parser::Message
+    /// [`Message`]: dbus_message_parser::message::Message
     pub async fn call(&self, msg: Message) -> DBusResult<Message> {
         // Create a oneshot channel for the response
         let (msg_sender, msg_receiver) = channel::<Message>();
@@ -115,7 +115,7 @@ impl DBus {
     /// This function returns the serial number of the [`Message`]. This is useful, where the the
     /// response and signals have to be processed in order.
     ///
-    /// [`Message`]: dbus_message_parser::Message
+    /// [`Message`]: dbus_message_parser::message::Message
     pub async fn call_reply_serial(
         &self,
         msg: Message,
@@ -129,7 +129,9 @@ impl DBus {
         Ok(reply_serial)
     }
 
-    /// Call the `Hello()` method of the DBus daemon.
+    /// Call the [`Hello()`] method of the DBus daemon.
+    ///
+    /// [`Hello()`]: https://dbus.freedesktop.org/doc/dbus-specification.html#bus-messages-hello
     async fn call_hello(&self) -> DBusResult<Message> {
         let msg = Message::method_call(
             "org.freedesktop.DBus".try_into().unwrap(),
@@ -158,12 +160,13 @@ impl DBus {
 
     /// Add a channel to a specific [`ObjectPath`].
     ///
-    /// The channel will receive all `MethodCall` messages for the specified [`ObjectPath`].
+    /// The channel will receive all [`MethodCall`] messages for the specified [`ObjectPath`].
     ///
     /// If there is already channel added for this [`ObjectPath`] then it will be replace. So the
-    /// old channel will not receive any `MethodCall` messages for the [`ObjectPath`] anymore.
+    /// old channel will not receive any [`MethodCall`] messages for the [`ObjectPath`] anymore.
     ///
-    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    /// [`ObjectPath`]: dbus_message_parser::value::ObjectPath
+    /// [`MethodCall`]: dbus_message_parser::message::MessageType::MethodCall
     pub fn add_method_call(
         &self,
         object_path: ObjectPath,
@@ -179,7 +182,7 @@ impl DBus {
     /// Even if there is no channel for this [`ObjectPath`] the function will return `Ok()`.
     ///
     /// [`add_method_call`]: #method.add_method_call
-    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    /// [`ObjectPath`]: dbus_message_parser::value::ObjectPath
     pub fn delete_object_path(&self, object_path: ObjectPath) -> DBusResult<()> {
         let command = Command::DeleteMethodCall(object_path);
         self.command_sender.unbounded_send(command)?;
@@ -200,7 +203,7 @@ impl DBus {
     /// (see [`add_method_call`]).
     ///
     /// [`add_method_call`]: #method.add_method_call
-    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    /// [`ObjectPath`]: dbus_message_parser::value::ObjectPath
     pub fn delete_method_call_receiver(&self, receiver: MpscReceiver<Message>) -> DBusResult<()> {
         let command = Command::DeleteMethodCallReceiver(receiver);
         self.command_sender.unbounded_send(command)?;
@@ -215,8 +218,8 @@ impl DBus {
     /// If there is already channel added for this [`Interface`] then it will be replace. So the old
     /// channel will not receive any `MethodCall` messages for the [`Interface`] anymore.
     ///
-    /// [`Interface`]: dbus_message_parser::Interface
-    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    /// [`Interface`]: dbus_message_parser::value::Interface
+    /// [`ObjectPath`]: dbus_message_parser::value::ObjectPath
     pub fn add_method_call_interface(
         &self,
         interface: Interface,
@@ -231,7 +234,7 @@ impl DBus {
     /// (see [`add_method_call_interface`]).
     ///
     /// [`add_method_call_interface`]: #method.add_method_call_interface
-    /// [`Interface`]: dbus_message_parser::Interface
+    /// [`Interface`]: dbus_message_parser::value::Interface
     pub fn delete_method_call_interface_sender(
         &self,
         sender: MpscSender<Message>,
@@ -245,7 +248,7 @@ impl DBus {
     /// (see [`add_method_call_interface`]).
     ///
     /// [`add_method_call_interface`]: #method.add_method_call_interface
-    /// [`Interface`]: dbus_message_parser::Interface
+    /// [`Interface`]: dbus_message_parser::value::Interface
     pub fn delete_method_call_interface_receiver(
         &self,
         receiver: MpscReceiver<Message>,
@@ -257,15 +260,16 @@ impl DBus {
 
     /// Add a channel to a specific [`ObjectPath`].
     ///
-    /// The channel will receive all `Signal` messages for the specified [`ObjectPath`].
+    /// The channel will receive all [`Signal`] messages for the specified [`ObjectPath`].
     ///
     /// The second argument specify a closure to filter the [`Message`]. If the closure returns true
     /// then the [`Message`] will not be send to the channel.
     ///
     /// There can be multiple channels, which will receive message of the specific [`ObjectPath`].
     ///
-    /// [`Message`]: dbus_message_parser::Message
-    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    /// [`Signal`]: dbus_message_parser::message::MessageType::Signal
+    /// [`Message`]: dbus_message_parser::message::Message
+    /// [`ObjectPath`]: dbus_message_parser::value::ObjectPath
     pub fn add_signal(
         &self,
         object_path: ObjectPath,
@@ -281,7 +285,7 @@ impl DBus {
     /// (see [`add_signal`]).
     ///
     /// [`add_signal`]: #method.add_signal
-    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    /// [`ObjectPath`]: dbus_message_parser::value::ObjectPath
     pub fn delete_signal_sender(&self, sender: MpscSender<Message>) -> DBusResult<()> {
         let command = Command::DeleteSignalSender(sender);
         self.command_sender.unbounded_send(command)?;
@@ -292,7 +296,7 @@ impl DBus {
     /// (see [`add_signal`]).
     ///
     /// [`add_signal`]: #method.add_signal
-    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    /// [`ObjectPath`]: dbus_message_parser::value::ObjectPath
     pub fn delete_signal_receiver(&self, receiver: MpscReceiver<Message>) -> DBusResult<()> {
         let command = Command::DeleteSignalReceiver(receiver);
         self.command_sender.unbounded_send(command)?;
@@ -305,7 +309,7 @@ impl DBus {
     /// (see [`add_method_call`]).
     ///
     /// [`add_method_call`]: #method.add_method_call
-    /// [`ObjectPath`]: dbus_message_parser::ObjectPath
+    /// [`ObjectPath`]: dbus_message_parser::value::ObjectPath
     pub async fn list_method_call(&self, object_path: ObjectPath) -> DBusResult<HashSet<String>> {
         let (sender, receiver) = channel();
         let command = Command::ListMethodCall(object_path, sender);
