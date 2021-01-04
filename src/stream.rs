@@ -4,8 +4,8 @@ use crate::{ServerAddress, ServerAddressParseError};
 use dbus_message_parser::message::Message;
 use futures::channel::mpsc::{unbounded, UnboundedSender};
 use hex::encode;
-use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::io::Error as IoError;
+use thiserror::Error;
 use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, BufStream};
 use tokio::net::{TcpStream, UnixStream};
 use tokio::spawn;
@@ -61,51 +61,22 @@ pub enum Stream {
     Tcp(TcpStream),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum StreamError {
-    AddressParseError(ServerAddressParseError),
-    IoError(IoError),
+    #[error("Could not parse address: {0}")]
+    ServerAddressParseError(#[from] ServerAddressParseError),
+    #[error("IO error: {0}")]
+    IoError(#[from] IoError),
+    #[error("Unix abstract is not yet supported")]
     UnixAbstractIsNotSupported,
+    #[error("Unix runtime is not yes supported")]
     UnixRuntimeIsNotSupported,
+    #[error("Could not connect to any address")]
     CouldNotConnectToAnyAddress,
+    #[error("Got the following response from daemon: {0}")]
     HandshakeOk(String),
+    #[error("Got the following response from daemon: {0}")]
     HandshakeUnixFD(String),
-}
-
-impl Display for StreamError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match self {
-            StreamError::AddressParseError(e) => write!(f, "Could not parse address: {}", e),
-            StreamError::IoError(e) => write!(f, "IO error: {}", e),
-            StreamError::UnixAbstractIsNotSupported => {
-                write!(f, "Unix abstract is not yet supported")
-            }
-            StreamError::UnixRuntimeIsNotSupported => {
-                write!(f, "Unix runtime is not yes supported")
-            }
-            StreamError::HandshakeOk(r) => {
-                write!(f, "Got the following response from daemon: {}", r)
-            }
-            StreamError::HandshakeUnixFD(r) => {
-                write!(f, "Got the following response from daemon: {}", r)
-            }
-            StreamError::CouldNotConnectToAnyAddress => {
-                write!(f, "Could not connect to any address")
-            }
-        }
-    }
-}
-
-impl From<ServerAddressParseError> for StreamError {
-    fn from(e: ServerAddressParseError) -> Self {
-        StreamError::AddressParseError(e)
-    }
-}
-
-impl From<IoError> for StreamError {
-    fn from(e: IoError) -> Self {
-        StreamError::IoError(e)
-    }
 }
 
 impl Stream {

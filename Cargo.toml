@@ -31,6 +31,7 @@ libc = "~0.2.81"
 bitflags = "~1.2.1"
 retain_mut = "~0.1.2"
 async-trait = "~0.1.42"
+thiserror = "~1.0.23"
 
 [dependencies.tokio]
 version = "~1.0.1"

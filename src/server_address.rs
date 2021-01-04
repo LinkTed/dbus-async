@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::net::{AddrParseError, IpAddr, SocketAddr};
 use std::num::ParseIntError;
 use std::string::FromUtf8Error;
+use thiserror::Error;
 
 /// This represents a DBus [server address].
 ///
@@ -18,107 +19,52 @@ pub enum ServerAddress {
 /// An enum representing all errors, which can occur during parsing a [server address].
 ///
 /// [server address]: https://dbus.freedesktop.org/doc/dbus-specification.html#addresses
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum ServerAddressParseError {
-    UnixParseError(UnixParseError),
-    SocketAddressError(SocketAddressParseError),
+    #[error("Could not parse unix address: {0}")]
+    UnixParseError(#[from] UnixParseError),
+    #[error("Could not parse socket address: {0}")]
+    SocketAddressParseError(#[from] SocketAddressParseError),
+    #[error("Unknown type")]
     Type,
-}
-
-impl Display for ServerAddressParseError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match self {
-            ServerAddressParseError::UnixParseError(e) => {
-                write!(f, "Could not parse unix address: {}", e)
-            }
-            ServerAddressParseError::SocketAddressError(e) => {
-                write!(f, "Could not parse socket address: {}", e)
-            }
-            ServerAddressParseError::Type => write!(f, "Unknown type"),
-        }
-    }
-}
-
-impl From<UnixParseError> for ServerAddressParseError {
-    fn from(e: UnixParseError) -> Self {
-        ServerAddressParseError::UnixParseError(e)
-    }
-}
-
-impl From<SocketAddressParseError> for ServerAddressParseError {
-    fn from(e: SocketAddressParseError) -> Self {
-        ServerAddressParseError::SocketAddressError(e)
-    }
 }
 
 /// An enum representing all errors, which can occur during parsing an unix path of a
 /// [server address]. For example: `unix:path=/tmp/dbus/path`.
 ///
 /// [server address]: https://dbus.freedesktop.org/doc/dbus-specification.html#addresses
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum UnixParseError {
+    #[error("Unknown char: 0x{0:02x}")]
     UnescapeChar(u8),
+    #[error("State is not Normal: {0}")]
     UnescapeState(UnescapeState),
-    UnescapeFromUtf8Error(FromUtf8Error),
+    #[error("UTF-8: {0}")]
+    UnescapeFromUtf8Error(#[from] FromUtf8Error),
+    #[error("Unknown hex: {0}")]
     UnescapeHex(u8),
+    #[error("Unknown type")]
     Type,
-}
-
-impl Display for UnixParseError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match self {
-            UnixParseError::UnescapeChar(c) => write!(f, "Unknown char: 0x{:02x}", c),
-            UnixParseError::UnescapeState(state) => write!(f, "State is not Normal: {}", state),
-            UnixParseError::UnescapeFromUtf8Error(e) => write!(f, "UTF-8: {}", e),
-            UnixParseError::UnescapeHex(c) => write!(f, "Unknown hex: {}", c),
-            UnixParseError::Type => write!(f, "Unknown type"),
-        }
-    }
-}
-
-impl From<FromUtf8Error> for UnixParseError {
-    fn from(e: FromUtf8Error) -> Self {
-        UnixParseError::UnescapeFromUtf8Error(e)
-    }
 }
 
 /// An enum representing all errors, which can occur during parsing a socket address of a
 /// [server address]. For example: `tcp:host=127.0.0.1,port=30900`.
 ///
 /// [server address]: https://dbus.freedesktop.org/doc/dbus-specification.html#addresses
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum SocketAddressParseError {
+    #[error("The socket address has {0} element")]
     VecLen(usize),
-    HostParseError(AddrParseError),
-    PortParseError(ParseIntError),
+    #[error("Host parse: {0}")]
+    HostParseError(#[from] AddrParseError),
+    #[error("Port parse: {0}")]
+    PortParseError(#[from] ParseIntError),
+    #[error("Unknown host")]
     UnknownHost,
+    #[error("Unknown port")]
     UnknownPort,
+    #[error("Unknown element")]
     UnknownElement,
-}
-
-impl Display for SocketAddressParseError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match self {
-            SocketAddressParseError::VecLen(l) => write!(f, "The socket address has {} element", l),
-            SocketAddressParseError::HostParseError(e) => write!(f, "Host parse: {}", e),
-            SocketAddressParseError::PortParseError(e) => write!(f, "Port parse: {}", e),
-            SocketAddressParseError::UnknownHost => write!(f, "Unknown host"),
-            SocketAddressParseError::UnknownPort => write!(f, "Unknown port"),
-            SocketAddressParseError::UnknownElement => write!(f, "Unknown element"),
-        }
-    }
-}
-
-impl From<AddrParseError> for SocketAddressParseError {
-    fn from(e: AddrParseError) -> Self {
-        SocketAddressParseError::HostParseError(e)
-    }
-}
-
-impl From<ParseIntError> for SocketAddressParseError {
-    fn from(e: ParseIntError) -> Self {
-        SocketAddressParseError::PortParseError(e)
-    }
 }
 
 #[inline]

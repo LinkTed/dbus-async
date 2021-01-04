@@ -6,8 +6,9 @@ use futures::channel::mpsc::TrySendError;
 use futures::channel::oneshot::Canceled;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::io::{Error as IoError, ErrorKind as IoErrorKind};
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum DBusError {
     SendMessage(Message),
     AddMethodCall(ObjectPath),
@@ -18,7 +19,7 @@ pub enum DBusError {
     AddSignal(ObjectPath),
     DeleteSignal,
     ReceiveMessage(Option<Message>),
-    StreamError(StreamError),
+    StreamError(#[from] StreamError),
     DBusSessionBusAddress,
     Hello(ErrorName),
     Close,
@@ -67,12 +68,6 @@ impl From<Canceled> for DBusError {
 impl From<DBusError> for IoError {
     fn from(e: DBusError) -> Self {
         IoError::new(IoErrorKind::Other, format!("call_hello: {:?}", e))
-    }
-}
-
-impl From<StreamError> for DBusError {
-    fn from(e: StreamError) -> Self {
-        DBusError::StreamError(e)
     }
 }
 
