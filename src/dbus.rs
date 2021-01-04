@@ -5,7 +5,7 @@ use crate::introspect::add_introspect;
 use crate::stream::Stream;
 use crate::{ClientAddress, DBusError, DBusNameFlag};
 use dbus_message_parser::message::{Message, MessageType};
-use dbus_message_parser::value::{Interface, ObjectPath, Value};
+use dbus_message_parser::value::{Bus, Interface, ObjectPath, Value};
 use futures::channel::mpsc::{
     unbounded, Receiver as MpscReceiver, Sender as MpscSender, UnboundedSender,
 };
@@ -142,14 +142,14 @@ impl DBus {
 
     /// Register a name for the peer. This calls the `RequestName(String, UInt32)` method of the
     /// DBus daemon.
-    pub async fn register_name(&self, name: String, flags: &DBusNameFlag) -> DBusResult<Message> {
+    pub async fn register_name(&self, name: Bus, flags: &DBusNameFlag) -> DBusResult<Message> {
         let mut msg = Message::method_call(
             "org.freedesktop.DBus".try_into().unwrap(),
             "/org/freedesktop/DBus".try_into().unwrap(),
             "org.freedesktop.DBus".try_into().unwrap(),
             "RequestName".try_into().unwrap(),
         );
-        msg.add_value(Value::String(name));
+        msg.add_value(Value::String(name.into()));
         msg.add_value(Value::Uint32(flags.bits()));
         self.call(msg).await
     }
