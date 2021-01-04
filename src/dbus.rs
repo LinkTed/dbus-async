@@ -140,9 +140,11 @@ impl DBus {
         self.call(msg).await
     }
 
-    /// Register a name for the peer. This calls the `RequestName(String, UInt32)` method of the
+    /// Register a name for the peer. This calls the [`RequestName(String, UInt32)`] method of the
     /// DBus daemon.
-    pub async fn register_name(&self, name: Bus, flags: &DBusNameFlag) -> DBusResult<Message> {
+    ///
+    /// [`RequestName(String, UInt32)`]: https://dbus.freedesktop.org/doc/dbus-specification.html#bus-messages-request-name
+    pub async fn request_name(&self, name: Bus, flags: &DBusNameFlag) -> DBusResult<Message> {
         let mut msg = Message::method_call(
             "org.freedesktop.DBus".try_into().unwrap(),
             "/org/freedesktop/DBus".try_into().unwrap(),

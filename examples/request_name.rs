@@ -9,7 +9,7 @@ async fn main() {
 
     // Register name
     let result = dbus
-        .register_name(
+        .request_name(
             "org.example.DBus".try_into().unwrap(),
             &DBusNameFlag::empty(),
         )
