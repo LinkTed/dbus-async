@@ -1,6 +1,7 @@
 use crate::{DBus, DBusResult};
 use async_trait::async_trait;
-use dbus_message_parser::{Message, ObjectPath};
+use dbus_message_parser::message::Message;
+use dbus_message_parser::value::ObjectPath;
 use futures::channel::mpsc::{channel, Receiver};
 use futures::lock::Mutex;
 use futures::StreamExt;

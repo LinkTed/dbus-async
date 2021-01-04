@@ -1,4 +1,5 @@
-use dbus_message_parser::{Interface, Message, ObjectPath};
+use dbus_message_parser::message::Message;
+use dbus_message_parser::value::{Interface, ObjectPath};
 use futures::channel::mpsc::{Receiver as MpscReceiver, Sender as MpscSender};
 use futures::channel::oneshot::Sender as OneshotSender;
 use std::collections::HashSet;

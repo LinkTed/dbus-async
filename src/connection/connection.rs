@@ -1,5 +1,6 @@
 use crate::command::Command;
-use dbus_message_parser::{Interface, Message, ObjectPath};
+use dbus_message_parser::message::Message;
+use dbus_message_parser::value::{Interface, ObjectPath};
 use futures::channel::mpsc::{Sender as MpscSender, UnboundedReceiver, UnboundedSender};
 use futures::channel::oneshot::Sender as OneshotSender;
 use lru::LruCache;

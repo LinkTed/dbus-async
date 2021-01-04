@@ -1,5 +1,5 @@
 use super::super::connection::Connection;
-use dbus_message_parser::{Message, MessageType};
+use dbus_message_parser::message::{Message, MessageType};
 
 impl Connection {
     pub(in super::super) fn receive_message(&mut self, msg: Message) {

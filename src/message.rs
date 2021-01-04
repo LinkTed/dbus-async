@@ -1,6 +1,7 @@
 use crate::command::Command;
 use bytes::{Buf, BytesMut};
-use dbus_message_parser::{DecodeError, Decoder, Encoder, Message};
+use dbus_message_parser::decode::DecodeError;
+use dbus_message_parser::message::Message;
 use futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
 use futures::stream::StreamExt;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -13,11 +14,9 @@ where
 {
     // Get the next Message to send to the DBus socket
     let mut buffer = BytesMut::new();
-    let mut fds = Vec::new();
     while let Some(msg) = message_receiver.next().await {
-        let mut encoder = Encoder::new(&mut buffer, &mut fds);
         // Try to encode
-        if let Err(e) = encoder.message(&msg) {
+        if let Err(e) = msg.encode() {
             error!("message_sink: {:?}", e);
             return;
         }
@@ -66,10 +65,10 @@ where
         }
 
         while !buffer_msg.is_empty() {
-            let mut decoder = Decoder::new(&buffer_msg);
-            match decoder.message() {
-                Ok(msg) => {
-                    let offset = decoder.get_offset();
+            let bytes = buffer_msg.clone().freeze();
+            let result = Message::decode(bytes);
+            match result {
+                Ok((msg, offset)) => {
                     buffer_msg.advance(offset);
                     // Try to send the message to the server
                     if let Err(e) = command_sender.unbounded_send(Command::ReceiveMessage(msg)) {
@@ -77,8 +76,11 @@ where
                         return;
                     }
                 }
-                Err(DecodeError::TooShort) => {
-                    debug!("message_stream: DecodeError::TooShort");
+                Err(DecodeError::NotEnoughBytes(u1, u2)) => {
+                    debug!(
+                        "message_stream: DecodeError::NotEnoughBytes({}, {})",
+                        u1, u2
+                    );
                     break;
                 }
                 Err(e) => {

@@ -1,5 +1,5 @@
 use super::super::connection::Connection;
-use dbus_message_parser::Message;
+use dbus_message_parser::message::Message;
 use retain_mut::RetainMut;
 
 impl Connection {

@@ -1,5 +1,5 @@
 use super::connection::{Connection, MessageSender};
-use dbus_message_parser::Message;
+use dbus_message_parser::message::Message;
 use futures::channel::mpsc::{Sender as MpscSender, TrySendError};
 use futures::channel::oneshot::Sender as OneshotSender;
 

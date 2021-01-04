@@ -1,5 +1,6 @@
 use dbus_async::DBus;
-use dbus_message_parser::{Message, MessageType, Value};
+use dbus_message_parser::message::{Message, MessageType};
+use dbus_message_parser::value::Value;
 use futures::channel::mpsc::{channel, Sender};
 use futures::stream::StreamExt;
 use std::convert::TryInto;

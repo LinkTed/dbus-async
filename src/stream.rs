@@ -1,7 +1,7 @@
 use crate::command::Command;
 use crate::message::{message_sink, message_stream};
 use crate::{ServerAddress, ServerAddressParseError};
-use dbus_message_parser::Message;
+use dbus_message_parser::message::Message;
 use futures::channel::mpsc::{unbounded, UnboundedSender};
 use hex::encode;
 use std::fmt::{Display, Formatter, Result as FmtResult};

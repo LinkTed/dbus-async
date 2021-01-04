@@ -1,5 +1,6 @@
 use crate::{DBus, DBusResult};
-use dbus_message_parser::{Message, Value};
+use dbus_message_parser::message::Message;
+use dbus_message_parser::value::Value;
 use futures::channel::mpsc::{channel, Receiver};
 use futures::StreamExt;
 use std::convert::TryInto;
@@ -20,10 +21,10 @@ async fn introspect(dbus: DBus, mut receiver: Receiver<Message>) {
             continue;
         };
         // Check the member.
-        match member.as_str() {
+        match member.as_ref() {
             "Introspect" => {
                 // Check if the signature of the message is correct.
-                if !msg.get_signature().is_empty() {
+                if !msg.get_signature().unwrap().unwrap().as_ref().is_empty() {
                     let msg = msg.invalid_args("Too many arguments".to_string());
                     if let Err(e) = dbus.send(msg) {
                         error!("could not send message: {}", e);

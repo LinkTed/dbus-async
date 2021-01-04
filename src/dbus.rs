@@ -4,7 +4,8 @@ use crate::error::DBusResult;
 use crate::introspect::add_introspect;
 use crate::stream::Stream;
 use crate::{DBusError, DBusNameFlag, ServerAddress};
-use dbus_message_parser::{Interface, Message, MessageType, ObjectPath, Value};
+use dbus_message_parser::message::{Message, MessageType};
+use dbus_message_parser::value::{Interface, ObjectPath, Value};
 use futures::channel::mpsc::{
     unbounded, Receiver as MpscReceiver, Sender as MpscSender, UnboundedSender,
 };
@@ -79,12 +80,8 @@ impl DBus {
         // Send the Hello message.
         let msg = dbus.call_hello().await?;
         if let MessageType::Error = msg.get_type() {
-            let error = if let Some(error) = msg.get_error_name() {
-                error
-            } else {
-                "no error name"
-            };
-            Err(DBusError::Hello(error.to_string()))
+            let error = msg.get_error_name().unwrap();
+            Err(DBusError::Hello(error.clone()))
         } else {
             Ok((dbus, connection_handle))
         }

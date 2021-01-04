@@ -1,6 +1,7 @@
 use crate::command::Command;
 use crate::stream::StreamError;
-use dbus_message_parser::{Interface, Message, ObjectPath};
+use dbus_message_parser::message::Message;
+use dbus_message_parser::value::{Error as ErrorName, Interface, ObjectPath};
 use futures::channel::mpsc::TrySendError;
 use futures::channel::oneshot::Canceled;
 use std::fmt::{Display, Formatter, Result as FmtResult};
@@ -19,7 +20,7 @@ pub enum DBusError {
     ReceiveMessage(Option<Message>),
     StreamError(StreamError),
     DBusSessionBusAddress,
-    Hello(String),
+    Hello(ErrorName),
     Close,
 }
 

@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use dbus_async::{Binder, DBus, DBusResult, Handler};
-use dbus_message_parser::{Message, Value};
+use dbus_message_parser::message::Message;
+use dbus_message_parser::value::Value;
 use futures::lock::Mutex;
 use std::convert::TryInto;
 use std::sync::Arc;
