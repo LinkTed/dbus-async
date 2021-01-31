@@ -8,7 +8,7 @@ A pure Rust written asynchronous DBus library.
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-dbus-async = "~2.0.0"
+dbus-async = "~2.1.0"
 ```
 
 You have to specify, which Tokio Runtime should be used.
