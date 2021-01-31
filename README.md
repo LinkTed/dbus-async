@@ -2,26 +2,27 @@
 A pure Rust written asynchronous DBus library.
 [![Latest version](https://img.shields.io/crates/v/dbus-async.svg)](https://crates.io/crates/dbus-async)
 [![License](https://img.shields.io/crates/l/dbus-async.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![Dependency status](https://deps.rs/repo/github/linkted/dbus-async/status.svg)](https://deps.rs/repo/github/linkted/dbus-async)
 
 ## Usage
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-dbus-async = "1.0"
+dbus-async = "~2.0.0"
 ```
 
 You have to specify, which Tokio Runtime should be used.
 * For multi-threaded add this to your `Cargo.toml`:
   ```rust
   [dependencies.tokio]
-  version = "0.2"
-  features = ["rt-threaded"] 
+  version = " ~1.1.1"
+  features = ["rt-multi-thread"] 
   ```
 * For single-threaded add this to your `Cargo.toml`:
   ```rust
   [dependencies.tokio]
-  version = "0.2"
-  features = ["rt-core"] 
+  version = "~1.1.1"
+  features = ["rt"] 
   ```
 
 ## Example
