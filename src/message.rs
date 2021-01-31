@@ -56,7 +56,7 @@ where
             }
         }
 
-        while !buffer_msg.is_empty() {
+        loop {
             let bytes = buffer_msg.clone().freeze();
             let result = Message::decode(bytes);
             match result {
@@ -66,6 +66,12 @@ where
                     if let Err(e) = command_sender.unbounded_send(Command::ReceiveMessage(msg)) {
                         error!("message_stream: {}", e);
                         return;
+                    }
+                    // Check if all bytes are decoded
+                    if buffer_msg.is_empty() {
+                        // Free the buffer
+                        buffer_msg = BytesMut::new();
+                        break;
                     }
                 }
                 Err(DecodeError::NotEnoughBytes(u1, u2)) => {
