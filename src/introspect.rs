@@ -6,12 +6,9 @@ use futures::StreamExt;
 use std::convert::TryInto;
 use tokio::spawn;
 
-lazy_static! {
-    static ref XML: String = "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD \
+const XML: &str = "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD \
     D-BUS Object Introspection 1.0//EN\" \"http://www.freedesktop.org/\
-    standards/dbus/1.0/introspect.dtd\">\n<node>\n"
-        .to_string();
-}
+    standards/dbus/1.0/introspect.dtd\">\n<node>\n";
 
 async fn introspect(dbus: DBus, mut receiver: Receiver<Message>) {
     while let Some(msg) = receiver.next().await {
@@ -41,7 +38,7 @@ async fn introspect(dbus: DBus, mut receiver: Receiver<Message>) {
                                 Ok(mut msg) => {
                                     // Create the XML response.
                                     // Start with the header.
-                                    let mut xml = XML.clone();
+                                    let mut xml = XML.to_string();
                                     // Add all nodes to the XML body.
                                     for l in list {
                                         xml += &format!("  <node name=\"{}\"/>\n", l);

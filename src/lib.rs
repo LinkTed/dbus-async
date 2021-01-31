@@ -1,7 +1,5 @@
 #[macro_use]
 extern crate log;
-#[macro_use(lazy_static)]
-extern crate lazy_static;
 #[macro_use(bitflags)]
 extern crate bitflags;
 
