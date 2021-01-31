@@ -13,23 +13,15 @@ where
     T: AsyncWriteExt + Unpin,
 {
     // Get the next Message to send to the DBus socket
-    let mut buffer = BytesMut::new();
     while let Some(msg) = message_receiver.next().await {
         // Try to encode
-        if let Err(e) = msg.encode() {
-            error!("message_sink: {:?}", e);
-            return;
-        }
-
-        match sink.write(buffer.as_mut()).await {
-            Ok(size) => {
-                buffer.advance(size);
-            }
+        let mut buffer = match msg.encode() {
+            Ok(buffer) => buffer,
             Err(e) => {
                 error!("message_sink: {:?}", e);
                 return;
             }
-        }
+        };
 
         while !buffer.is_empty() {
             match sink.write(buffer.as_mut()).await {
