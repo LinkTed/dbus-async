@@ -1,4 +1,4 @@
-use super::super::connection::Connection;
+use super::super::Connection;
 use dbus_message_parser::message::Message;
 use retain_mut::RetainMut;
 

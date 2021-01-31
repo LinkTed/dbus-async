@@ -1,4 +1,4 @@
-use super::connection::Connection;
+use super::Connection;
 use crate::command::Command;
 use futures::StreamExt;
 

@@ -1,4 +1,4 @@
-use super::connection::Connection;
+use super::Connection;
 use dbus_message_parser::value::ObjectPath;
 use futures::channel::oneshot::Sender;
 use std::collections::HashSet;

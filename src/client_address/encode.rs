@@ -62,7 +62,7 @@ impl ClientAddress {
             None => return result,
         }
         // Get the remaining addresses and add the seperator
-        while let Some(server_address) = iter.next() {
+        for server_address in iter {
             result.push(';');
             result += &server_address.to_string();
         }

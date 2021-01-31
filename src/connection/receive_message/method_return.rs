@@ -1,4 +1,4 @@
-use super::super::connection::{Connection, MessageSender};
+use super::super::{Connection, MessageSender};
 use dbus_message_parser::message::Message;
 
 impl Connection {
