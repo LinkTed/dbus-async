@@ -19,24 +19,24 @@ repository = "https://github.com/LinkTed/dbus-async"
 categories = ["asynchronous"]
 
 [dependencies]
-log = "~0.4.11"
+log = "~0.4.14"
 lazy_static = "~1.4.0"
-futures = "~0.3.8"
+futures = "~0.3.12"
 dbus-message-parser = "~4.0.1"
 hex = "~0.4.2"
-bytes = "~1.0.0"
-regex = "~1.4.2"
+bytes = "~1.0.1"
+regex = "~1.4.3"
 lru = "~0.6.3"
-libc = "~0.2.81"
+libc = "~0.2.84"
 bitflags = "~1.2.1"
 retain_mut = "~0.1.2"
 async-trait = "~0.1.42"
 thiserror = "~1.0.23"
 
 [dependencies.tokio]
-version = "~1.0.1"
+version = "~1.1.1"
 features = ["net", "io-util"]
 
 [dev-dependencies.tokio]
-version = "~1.0.1"
+version = "~1.1.1"
 features = ["rt-multi-thread", "macros"]
