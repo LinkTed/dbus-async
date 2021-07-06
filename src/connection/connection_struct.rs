@@ -19,13 +19,15 @@ pub(crate) struct Connection {
     pub(super) method_calls: HashMap<ObjectPath, MpscSender<Message>>,
     pub(super) method_calls_interface: HashMap<Interface, MpscSender<Message>>,
     pub(super) command_receiver: UnboundedReceiver<Command>,
-    pub(super) message_sender: UnboundedSender<Message>,
+    pub(super) message_sink: UnboundedSender<Message>,
+    pub(super) message_stream: UnboundedReceiver<Message>,
 }
 
 impl Connection {
     pub(crate) fn from(
         command_receiver: UnboundedReceiver<Command>,
-        message_sender: UnboundedSender<Message>,
+        message_sink: UnboundedSender<Message>,
+        message_stream: UnboundedReceiver<Message>,
     ) -> Connection {
         Connection {
             serial: 0,
@@ -34,7 +36,8 @@ impl Connection {
             method_calls: HashMap::new(),
             method_calls_interface: HashMap::new(),
             command_receiver,
-            message_sender,
+            message_sink,
+            message_stream,
         }
     }
 }

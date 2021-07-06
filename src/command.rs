@@ -25,6 +25,5 @@ pub enum Command {
     ),
     DeleteSignalSender(MpscSender<Message>),
     DeleteSignalReceiver(MpscReceiver<Message>),
-    ReceiveMessage(Message),
     Close,
 }

@@ -53,7 +53,6 @@ impl From<TrySendError<Command>> for DBusError {
             Command::AddSignal(object_path, _, _) => DBusError::AddSignal(object_path),
             Command::DeleteSignalSender(_) => DBusError::DeleteSignal,
             Command::DeleteSignalReceiver(_) => DBusError::DeleteSignal,
-            Command::ReceiveMessage(msg) => DBusError::ReceiveMessage(Some(msg)),
             Command::Close => DBusError::Close,
         }
     }

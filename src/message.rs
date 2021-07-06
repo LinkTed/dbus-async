@@ -1,4 +1,3 @@
-use crate::command::Command;
 use bytes::{Buf, BytesMut};
 use dbus_message_parser::decode::DecodeError;
 use dbus_message_parser::message::Message;
@@ -38,7 +37,7 @@ where
 }
 
 /// The message stream task. This task takes messages, which were received from the DBus socket.
-pub async fn message_stream<T>(mut stream: T, command_sender: UnboundedSender<Command>)
+pub async fn message_stream<T>(mut stream: T, message_sink: UnboundedSender<Message>)
 where
     T: AsyncReadExt + Unpin,
 {
@@ -63,7 +62,7 @@ where
                 Ok((msg, offset)) => {
                     buffer_msg.advance(offset);
                     // Try to send the message to the server
-                    if let Err(e) = command_sender.unbounded_send(Command::ReceiveMessage(msg)) {
+                    if let Err(e) = message_sink.unbounded_send(msg) {
                         error!("message_stream: {}", e);
                         return;
                     }

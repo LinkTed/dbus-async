@@ -61,10 +61,10 @@ impl DBus {
 
         // Create and spawn the stream and sink task.
         let (address, stream) = Stream::new(addressses).await?;
-        let message_sender = stream.start(command_sender.clone());
+        let (message_sink, message_stream) = stream.start();
 
         // Spawn the connection task.
-        let connection = Connection::from(command_receiver, message_sender);
+        let connection = Connection::from(command_receiver, message_sink, message_stream);
         let connection_handle = spawn(connection.run());
 
         let address = Arc::new(address);

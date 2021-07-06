@@ -10,7 +10,7 @@ impl Connection {
         msg.set_serial(self.serial);
 
         // Send the message.
-        self.message_sender.unbounded_send(msg)?;
+        self.message_sink.unbounded_send(msg)?;
         Ok(self.serial)
     }
 

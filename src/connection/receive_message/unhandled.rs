@@ -8,7 +8,7 @@ impl Connection {
             self.serial += 1;
             msg.set_serial(self.serial);
 
-            if let Err(e) = self.message_sender.unbounded_send(msg) {
+            if let Err(e) = self.message_sink.unbounded_send(msg) {
                 error!("MethodCall: message_sender.unbounded_send: {:?}", e);
             }
         }
