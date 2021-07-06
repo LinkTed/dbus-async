@@ -9,13 +9,13 @@ use std::sync::Arc;
 
 /// A trait for the generic `Message` handler.
 #[async_trait]
-pub trait Handler: Sized + Send + Sync + 'static {
+pub trait Handler: Send {
     /// Handle the `Message`.
     async fn handle(&mut self, dbus: &DBus, msg: Message) -> DBusResult<()>;
 }
 
 #[async_trait]
-pub trait Binder: Sized + Send + Sync + 'static {
+pub trait Binder: Sized {
     async fn bind(self, dbus: DBus, object_path: ObjectPath) -> DBusResult<()> {
         let (sender, receiver) = channel(128);
         dbus.add_method_call(object_path, sender)?;
