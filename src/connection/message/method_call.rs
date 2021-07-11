@@ -8,7 +8,7 @@ impl Connection {
     fn find_sender_by_object_path(&mut self, msg: Message) -> Option<Message> {
         let object_path = msg.get_path().unwrap();
         // Try to get the channel by `ObjectPath`.
-        if let Some(sender) = self.method_calls.get_mut(&object_path) {
+        if let Some(sender) = self.method_calls.get_mut(object_path) {
             let object_path = object_path.clone();
             // Try to send the `Message`.
             // This can fail if the channel is full.
