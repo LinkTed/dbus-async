@@ -3,9 +3,10 @@ use crate::connection::Connection;
 use crate::error::DBusResult;
 use crate::introspect::add_introspect;
 use crate::stream::Stream;
-use crate::{ClientAddress, DBusError, DBusNameFlag};
+use crate::{DBusError, DBusNameFlag};
 use dbus_message_parser::message::{Message, MessageType};
 use dbus_message_parser::value::{Bus, Interface, ObjectPath, Value};
+use dbus_server_address_parser::Address;
 use futures::channel::mpsc::{
     unbounded, Receiver as MpscReceiver, Sender as MpscSender, UnboundedSender,
 };
@@ -20,7 +21,7 @@ use tokio::task::JoinHandle;
 #[derive(Clone)]
 pub struct DBus {
     command_sender: UnboundedSender<Command>,
-    address: Arc<ClientAddress>,
+    address: Arc<Address>,
 }
 
 impl DBus {
@@ -325,7 +326,7 @@ impl DBus {
     }
 
     /// Get the current path of the DBus daemon.
-    pub fn get_address(&self) -> &ClientAddress {
+    pub fn get_address(&self) -> &Address {
         self.address.as_ref()
     }
 }
