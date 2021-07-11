@@ -1,5 +1,6 @@
 # dbus-async
-A pure Rust written asynchronous DBus library.
+A pure Rust written asynchronous DBus library.  
+[![Build status](https://github.com/LinkTed/dbus-async/workflows/Continuous%20Integration/badge.svg)](https://github.com/LinkTed/dbus-async/actions?query=workflow%3A%22Continuous+Integration%22)
 [![Latest version](https://img.shields.io/crates/v/dbus-async.svg)](https://crates.io/crates/dbus-async)
 [![License](https://img.shields.io/crates/l/dbus-async.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Dependency status](https://deps.rs/repo/github/linkted/dbus-async/status.svg)](https://deps.rs/repo/github/linkted/dbus-async)
