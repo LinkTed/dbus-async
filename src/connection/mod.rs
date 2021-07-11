@@ -1,7 +1,6 @@
-mod connection_struct;
-mod list_path;
-mod receive_message;
+mod command;
+mod message;
 mod run;
-mod send_message;
+mod r#struct;
 
-pub(crate) use connection_struct::{Connection, MessageSender};
+pub(crate) use r#struct::{Connection, MessageSender};
