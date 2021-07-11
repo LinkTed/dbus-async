@@ -7,7 +7,7 @@ impl Connection {
         // It is a Signal so we have to get the Path first.
         let path = msg.get_path().unwrap();
         // Try to get the signal handler
-        if let Some(list) = self.signals.get_mut(&path) {
+        if let Some(list) = self.signals.get_mut(path) {
             // Go through the list and try to send the signal.
             list.retain_mut(move |(filter, sender)| {
                 if let Some(filter) = filter {

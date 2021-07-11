@@ -9,7 +9,7 @@ impl Connection {
         let mut result = HashSet::new();
 
         for p in self.method_calls.keys() {
-            if let Some(mut split) = p.strip_prefix_elements(&object_path) {
+            if let Some(mut split) = p.strip_prefix_elements(object_path) {
                 if let Some(base) = split.next() {
                     result.insert(base.to_string());
                 }
