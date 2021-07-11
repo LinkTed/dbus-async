@@ -1,8 +1,9 @@
 use bytes::{Buf, BytesMut};
-use dbus_message_parser::decode::DecodeError;
-use dbus_message_parser::message::Message;
-use futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
-use futures::stream::StreamExt;
+use dbus_message_parser::{decode::DecodeError, message::Message};
+use futures::{
+    channel::mpsc::{UnboundedReceiver, UnboundedSender},
+    stream::StreamExt,
+};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 /// The message sink task. This task takes messages from the channel and send it through the DBus
@@ -48,6 +49,10 @@ where
         match stream.read(&mut buffer[..]).await {
             Ok(size) => {
                 buffer_msg.extend_from_slice(&buffer[..size]);
+                if size == 0 {
+                    error!("message_stream: size == 0");
+                    return;
+                }
             }
             Err(e) => {
                 error!("message_stream: {:?}", e);
