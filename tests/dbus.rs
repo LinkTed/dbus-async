@@ -5,7 +5,7 @@ use std::convert::TryInto;
 
 #[tokio::test]
 async fn message_send() {
-    let (dbus, _connection_handle) = DBus::session(true)
+    let (dbus, connection_handle) = DBus::session(true)
         .await
         .expect("failed to get the DBus object");
 
@@ -19,6 +19,10 @@ async fn message_send() {
 
     // Send the message
     dbus.send(msg).unwrap();
+
+    // Close and wait until the message is really sent.
+    dbus.close().unwrap();
+    connection_handle.await.unwrap();
 }
 
 #[tokio::test]
