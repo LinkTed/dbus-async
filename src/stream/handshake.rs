@@ -3,6 +3,8 @@ use std::io::Error as IoError;
 use thiserror::Error;
 use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, BufStream};
 
+pub(super) type Nonce = [u8; 16];
+
 #[derive(Debug, Error)]
 pub enum HandshakeError {
     #[error("Could not list available mechanisms")]
@@ -42,11 +44,14 @@ where
         Ok(())
     }
 
-    async fn list_available_mechanisms(&mut self) -> Result<Vec<String>, HandshakeError> {
-        self.write_line("AUTH").await?;
+    async fn request(&mut self, line: &str) -> Result<String, IoError> {
+        self.write_line(line).await?;
+        self.read_line().await
+    }
 
-        let resp = self.read_line().await?;
-        if let Some(mechanisms) = resp.strip_prefix("REJECTED ") {
+    async fn list_available_mechanisms(&mut self) -> Result<Vec<String>, HandshakeError> {
+        let response = self.request("AUTH").await?;
+        if let Some(mechanisms) = response.strip_prefix("REJECTED ") {
             let mut result = Vec::new();
             for mechanism in mechanisms.split(' ') {
                 result.push(mechanism.to_owned());
@@ -63,14 +68,11 @@ where
     }
 
     async fn negotiate_unix_fd(&mut self) -> Result<(), HandshakeError> {
-        self.write_line("NEGOTIATE_UNIX_FD").await?;
-
-        let resp = self.read_line().await?;
-        // Check if the authentication is successful.
-        if resp == "AGREE_UNIX_FD" {
+        let response = self.request("NEGOTIATE_UNIX_FD").await?;
+        if response == "AGREE_UNIX_FD" {
             Ok(())
         } else {
-            Err(HandshakeError::NegotiateUnixFdError(resp))
+            Err(HandshakeError::NegotiateUnixFdError(response))
         }
     }
 
@@ -81,27 +83,20 @@ where
         let hex = encode(uid.to_string());
         // Authenticate to the DBus daemon.
         let cmd = format!("AUTH EXTERNAL {}", hex);
-        self.write_line(cmd.as_str()).await?;
-        // Read the response of the socket.
-        let resp = self.read_line().await?;
-        // Check if the authentication is successful.
-        if resp.starts_with("OK ") {
+        let response = self.request(&cmd).await?;
+        if response.starts_with("OK ") {
             Ok(())
         } else {
-            Err(HandshakeError::AuthenticationError(resp))
+            Err(HandshakeError::AuthenticationError(response))
         }
     }
 
     async fn auth_anonymous(&mut self) -> Result<(), HandshakeError> {
-        self.write_line("AUTH ANONYMOUS 646275732d6173796e63")
-            .await?;
-        // Read the response of the socket.
-        let resp = self.read_line().await?;
-        // Check if the authentication is successful.
-        if resp.starts_with("OK ") {
+        let response = self.request("AUTH ANONYMOUS 646275732d6173796e63").await?;
+        if response.starts_with("OK ") {
             Ok(())
         } else {
-            Err(HandshakeError::AuthenticationError(resp))
+            Err(HandshakeError::AuthenticationError(response))
         }
     }
 
@@ -124,14 +119,14 @@ where
     }
 
     async fn begin(mut self) -> Result<(), IoError> {
-        // Authentication was successful.
         self.write_line("BEGIN").await
     }
 
-    async fn new(stream: T) -> Result<Handshake<T>, IoError> {
+    async fn new(stream: T, nonce: &Option<Nonce>) -> Result<Handshake<T>, IoError> {
         let mut buf_stream = BufStream::new(stream);
-        // Connect to the Unix Domain Stream.
-        // let mut stream = TokioUnixStream::connect(path).await?;
+        if let Some(nonce) = nonce {
+            buf_stream.write_all(nonce).await?;
+        }
         // Write a zero to the socket.
         let zero: [u8; 1] = [0; 1];
         buf_stream.write_all(&zero[..]).await?;
@@ -142,8 +137,9 @@ where
     pub(super) async fn handshake(
         stream: &mut T,
         negotiate_unix_fd: bool,
+        nonce: &Option<Nonce>,
     ) -> Result<(), HandshakeError> {
-        let mut handshake = Handshake::new(stream).await?;
+        let mut handshake = Handshake::new(stream, nonce).await?;
 
         handshake.authenticate().await?;
 
