@@ -22,7 +22,7 @@ categories = ["asynchronous"]
 log = "~0.4.14"
 futures = "~0.3.12"
 dbus-message-parser = "~4.1.0"
-dbus-server-address-parser = "~1.0.0"
+dbus-server-address-parser = "~1.0.1"
 hex = "~0.4.2"
 bytes = "~1.0.1"
 lru = "~0.6.3"
@@ -34,7 +34,7 @@ thiserror = "~1.0.23"
 
 [dependencies.tokio]
 version = "~1.1.1"
-features = ["net", "io-util"]
+features = ["fs", "net", "io-util"]
 
 [dev-dependencies.tokio]
 version = "~1.1.1"
