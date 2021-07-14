@@ -5,7 +5,7 @@ use std::convert::TryInto;
 
 #[tokio::test]
 async fn message_send() {
-    let (dbus, connection_handle) = DBus::session(true)
+    let (dbus, connection_handle) = DBus::system(true)
         .await
         .expect("failed to get the DBus object");
 
@@ -27,7 +27,7 @@ async fn message_send() {
 
 #[tokio::test]
 async fn method_call() {
-    let (dbus, _connection_handle) = DBus::session(true)
+    let (dbus, _connection_handle) = DBus::system(true)
         .await
         .expect("failed to get the DBus object");
 
@@ -45,7 +45,7 @@ async fn method_call() {
 
 #[tokio::test]
 async fn method_call_with_args() {
-    let (dbus, _connection_handle) = DBus::session(true)
+    let (dbus, _connection_handle) = DBus::system(true)
         .await
         .expect("failed to get the DBus object");
 
@@ -68,7 +68,7 @@ async fn method_call_with_args() {
 
 #[tokio::test]
 async fn request_name() {
-    let (dbus, _connection_handle) = DBus::session(true)
+    let (dbus, _connection_handle) = DBus::system(true)
         .await
         .expect("failed to get the DBus object");
 
