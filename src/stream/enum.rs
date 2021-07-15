@@ -1,11 +1,11 @@
 use super::{
-    connect::ConnectError,
+    handshake::HandshakeError,
     message::{message_sink, message_stream},
 };
 use dbus_message_parser::message::Message;
 use dbus_server_address_parser::DecodeError;
 use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
-use std::io::Error as IoError;
+use std::{io::Error as IoError, str::Utf8Error};
 use thiserror::Error;
 use tokio::{
     net::{TcpStream, UnixStream},
@@ -22,14 +22,28 @@ pub enum Stream {
 pub enum StreamError {
     #[error("Could not parse address: {0}")]
     DecodeError(#[from] DecodeError),
-    #[error("IO error: {0}")]
+    #[error("Unix abstract is not yet supported")]
+    UnixAbstractNotSupported,
+    #[error("Could not connect to any address")]
+    CouldNotConnectToAnyAddress,
+    #[error("Address is not connectable")]
+    AddressNotConnectable,
+    #[error("Could not resolve IP addresses, which match the given IP family")]
+    TcpResolveIpAddress,
+    #[error("Noncefile is too large")]
+    NonceTcpFileTooLarge,
+    #[error("Noncefile is too small")]
+    NonceTcpFileTooSmall,
+    #[error("Autolaunch is currently not supported")]
+    AutolaunchNotSupported,
+    #[error("Launchd is currently not supported")]
+    LaunchdNotSupported,
+    #[error("IO Error: {0}")]
     IoError(#[from] IoError),
-    #[error("Got the following response from daemon: {0}")]
-    HandshakeOk(String),
-    #[error("Got the following response from daemon: {0}")]
-    HandshakeUnixFD(String),
-    #[error("Could not connect: {0}")]
-    ConnectError(#[from] ConnectError),
+    #[error("Handshake Error: {0}")]
+    HandshakeError(#[from] HandshakeError),
+    #[error("Printed path is not UTF-8")]
+    UnixexecStdout(Utf8Error),
 }
 
 impl Stream {
