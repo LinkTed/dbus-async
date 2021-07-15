@@ -56,10 +56,23 @@ async fn main() {
 If you want to implement a DBus service and do not implement the `dbus_async::Handler` trait 
 manually then use `dbus-async-derive` crate.
 
-## TODO
-- [x] Implement server address [parser](https://dbus.freedesktop.org/doc/dbus-specification.html#addresses)
-- [ ] Add standard interfaces:
+## Features
+- [Authentication Protocol](https://dbus.freedesktop.org/doc/dbus-specification.html#auth-protocol)
+  * [x] [`EXTERNAL`](https://dbus.freedesktop.org/doc/dbus-specification.html#auth-mechanisms-external)
+  * [x] [`ANONYMOUS`](https://dbus.freedesktop.org/doc/dbus-specification.html#auth-mechanisms-anonymous)
+  * [ ] [`DBUS_COOKIE_SHA1`](https://dbus.freedesktop.org/doc/dbus-specification.html#auth-mechanisms-sha)
+- [Server Addresses](https://dbus.freedesktop.org/doc/dbus-specification.html#addresses)
+  * [ ] [`unix`](https://dbus.freedesktop.org/doc/dbus-specification.html#transports-unix-domain-sockets-addresses)
+    - [x] `path`
+    - [ ] `abstract`
+  * [x] [`unixexec`](https://dbus.freedesktop.org/doc/dbus-specification.html#transports-exec)
+        (argv0 is not supported)
+  * [x] [`tcp`](https://dbus.freedesktop.org/doc/dbus-specification.html#transports-tcp-sockets)
+  * [x] [`nonce-tcp`](https://dbus.freedesktop.org/doc/dbus-specification.html#transports-nonce-tcp-sockets)
+  * [ ] [`launchd`](https://dbus.freedesktop.org/doc/dbus-specification.html#transports-launchd)
+  * [ ] [`autolaunch`](https://dbus.freedesktop.org/doc/dbus-specification.html#meta-transports-autolaunch)
+- [Standard Interfaces](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces)
+  * [x] [`org.freedesktop.DBus.Introspectable`](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-introspectable)
   * [ ] [`org.freedesktop.DBus.Peer`](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-peer)
   * [ ] [`org.freedesktop.DBus.ObjectManager`](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-objectmanager)
-- [x] Add TCP support
-- [ ] FD support ([PR](https://github.com/rust-lang/rust/pull/69864))
+- [ ] FD support ([Tracking Issue](https://github.com/rust-lang/rust/issues/76915))
