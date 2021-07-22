@@ -55,7 +55,7 @@ jobs:
     needs: clippy
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
         rust_channel: [stable, nightly]
     runs-on: ${{ matrix.os }}
     steps:
