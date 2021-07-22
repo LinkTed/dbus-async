@@ -73,6 +73,6 @@ manually then use `dbus-async-derive` crate.
   * [ ] [`autolaunch`](https://dbus.freedesktop.org/doc/dbus-specification.html#meta-transports-autolaunch)
 - [Standard Interfaces](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces)
   * [x] [`org.freedesktop.DBus.Introspectable`](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-introspectable)
-  * [ ] [`org.freedesktop.DBus.Peer`](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-peer)
+  * [x] [`org.freedesktop.DBus.Peer`](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-peer)
   * [ ] [`org.freedesktop.DBus.ObjectManager`](https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-objectmanager)
 - [ ] FD support ([Tracking Issue](https://github.com/rust-lang/rust/issues/76915))

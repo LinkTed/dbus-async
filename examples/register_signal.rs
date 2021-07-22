@@ -9,7 +9,7 @@ use std::convert::TryInto;
 // peer.
 #[tokio::main]
 async fn main() {
-    let (dbus, _connection_handle) = DBus::session(true)
+    let (dbus, _connection_handle) = DBus::session(true, true)
         .await
         .expect("failed to get the DBus object");
 

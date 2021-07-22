@@ -29,7 +29,7 @@ impl Handler for UserDefinedObject {
 
 #[tokio::main]
 async fn main() {
-    let (dbus, _connection_handle) = DBus::session(true)
+    let (dbus, _connection_handle) = DBus::session(true, true)
         .await
         .expect("failed to get the DBus object");
     // Create a object, which implement the `Handle`

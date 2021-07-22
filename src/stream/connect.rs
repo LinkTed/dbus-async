@@ -1,7 +1,5 @@
-use super::{
-    handshake::{Handshake, Nonce},
-    Stream, StreamError,
-};
+use super::{handshake::Handshake, Stream, StreamError};
+use crate::Uuid;
 use async_recursion::async_recursion;
 use dbus_server_address_parser::{Address, Family, NonceTcp, Tcp, Unix, UnixType, Unixexec};
 use std::{
@@ -59,7 +57,7 @@ impl Stream {
     async fn tcp_connect_address(
         socket_addr: &SocketAddr,
         family: &Option<Family>,
-        nonce: &Option<Nonce>,
+        nonce: &Option<Uuid>,
     ) -> Result<TcpStream, StreamError> {
         if !Stream::tcp_family_match(socket_addr, family) {
             return Err(StreamError::TcpResolveIpAddress);
@@ -75,7 +73,7 @@ impl Stream {
         host: &str,
         port: u16,
         family: &Option<Family>,
-        nonce: &Option<Nonce>,
+        nonce: &Option<Uuid>,
     ) -> Result<Stream, StreamError> {
         if let Ok(ip_addr) = host.parse::<IpAddr>() {
             let socket_addr = SocketAddr::new(ip_addr, port);
@@ -107,8 +105,8 @@ impl Stream {
         Stream::tcp_connect(host, port, family, &None).await
     }
 
-    async fn nonce_tcp_read_nonce(nonce_tcp: &NonceTcp) -> Result<Nonce, StreamError> {
-        let mut nonce: Nonce = [0; 16];
+    async fn nonce_tcp_read_nonce(nonce_tcp: &NonceTcp) -> Result<Uuid, StreamError> {
+        let mut nonce: Uuid = [0; 16];
 
         let noncefile = nonce_tcp.noncefile.as_ref().unwrap();
         let mut noncefile = File::open(noncefile).await?;

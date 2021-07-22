@@ -1,9 +1,8 @@
+use crate::Uuid;
 use hex::encode;
 use std::io::Error as IoError;
 use thiserror::Error;
 use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, BufStream};
-
-pub(super) type Nonce = [u8; 16];
 
 #[derive(Debug, Error)]
 pub enum HandshakeError {
@@ -122,7 +121,7 @@ where
         self.write_line("BEGIN").await
     }
 
-    async fn new(stream: T, nonce: &Option<Nonce>) -> Result<Handshake<T>, IoError> {
+    async fn new(stream: T, nonce: &Option<Uuid>) -> Result<Handshake<T>, IoError> {
         let mut buf_stream = BufStream::new(stream);
         if let Some(nonce) = nonce {
             buf_stream.write_all(nonce).await?;
@@ -137,7 +136,7 @@ where
     pub(super) async fn handshake(
         stream: &mut T,
         negotiate_unix_fd: bool,
-        nonce: &Option<Nonce>,
+        nonce: &Option<Uuid>,
     ) -> Result<(), HandshakeError> {
         let mut handshake = Handshake::new(stream, nonce).await?;
 

@@ -2,6 +2,7 @@ use crate::command::Command;
 use crate::connection::Connection;
 use crate::error::DBusResult;
 use crate::introspect::add_introspect;
+use crate::peer::add_peer;
 use crate::stream::Stream;
 use crate::{DBusError, DBusNameFlag};
 use dbus_message_parser::message::{Message, MessageType};
@@ -27,12 +28,17 @@ pub struct DBus {
 impl DBus {
     /// Connect to the session DBus.
     ///
-    /// If the first argument (`introspectable`) is `true` then the Peer is introspectable.
+    /// If the first argument (`introspectable`) is `true` then the Peer is [introspectable].
+    /// If the second argument (`peer`) is `true` then the Peer has the
+    /// [`org.freedesktop.DBus.Peer`].
     ///
     /// The `DBUS_SESSION_BUS_ADDRESS` environment variable **have to** be defined.
-    pub async fn session(introspectable: bool) -> DBusResult<(DBus, JoinHandle<()>)> {
+    ///
+    /// [introspectable]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-introspectable
+    /// [`org.freedesktop.DBus.Peer`]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-peer
+    pub async fn session(introspectable: bool, peer: bool) -> DBusResult<(DBus, JoinHandle<()>)> {
         if let Some(path) = option_env!("DBUS_SESSION_BUS_ADDRESS") {
-            DBus::new(path, introspectable).await
+            DBus::new(path, introspectable, peer).await
         } else {
             // It could not connect to any socket
             Err(DBusError::DBusSessionBusAddress)
@@ -41,23 +47,37 @@ impl DBus {
 
     /// Connect to the system DBus.
     ///
-    /// If the first argument (`introspectable`) is `true` then the Peer is introspectable.
+    /// If the first argument (`introspectable`) is `true` then the Peer is [introspectable].
+    /// If the second argument (`peer`) is `true` then the Peer has the
+    /// [`org.freedesktop.DBus.Peer`].
     ///
     /// If there `DBUS_SYSTEM_BUS_ADDRESS` environment variable is defined then this path will be
     /// used, else `unix:path=/var/run/dbus/system_bus_socket`.
-    pub async fn system(introspectable: bool) -> DBusResult<(DBus, JoinHandle<()>)> {
+    ///
+    /// [introspectable]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-introspectable
+    /// [`org.freedesktop.DBus.Peer`]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-peer
+    pub async fn system(introspectable: bool, peer: bool) -> DBusResult<(DBus, JoinHandle<()>)> {
         let path = if let Some(path) = option_env!("DBUS_SYSTEM_BUS_ADDRESS") {
             path
         } else {
             "unix:path=/var/run/dbus/system_bus_socket"
         };
-        DBus::new(path, introspectable).await
+        DBus::new(path, introspectable, peer).await
     }
 
     /// Connect to the specific (`addressses`) DBus daemon.
     ///
-    /// If the second argument (`introspectable`) is `true` then the Peer is introspectable.
-    pub async fn new(addressses: &str, introspectable: bool) -> DBusResult<(DBus, JoinHandle<()>)> {
+    /// If the second argument (`introspectable`) is `true` then the Peer is [introspectable].
+    /// If the third argument (`peer`) is `true` then the Peer has the
+    /// [`org.freedesktop.DBus.Peer`].
+    ///
+    /// [introspectable]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-introspectable
+    /// [`org.freedesktop.DBus.Peer`]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-peer
+    pub async fn new(
+        addressses: &str,
+        introspectable: bool,
+        peer: bool,
+    ) -> DBusResult<(DBus, JoinHandle<()>)> {
         let (command_sender, command_receiver) = unbounded::<Command>();
 
         // Create and spawn the stream and sink task.
@@ -76,6 +96,10 @@ impl DBus {
 
         if introspectable {
             add_introspect(dbus.clone())?;
+        }
+
+        if peer {
+            add_peer(dbus.clone())?;
         }
 
         // Send the Hello message.
