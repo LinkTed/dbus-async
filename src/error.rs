@@ -1,11 +1,13 @@
-use crate::command::Command;
-use crate::stream::StreamError;
-use dbus_message_parser::message::Message;
-use dbus_message_parser::value::{Error as ErrorName, Interface, ObjectPath};
-use futures::channel::mpsc::TrySendError;
-use futures::channel::oneshot::Canceled;
-use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::io::{Error as IoError, ErrorKind as IoErrorKind};
+use crate::{command::Command, stream::StreamError};
+use dbus_message_parser::{
+    message::Message,
+    value::{Error as ErrorName, Interface, ObjectPath},
+};
+use futures::channel::{mpsc::TrySendError, oneshot::Canceled};
+use std::{
+    fmt::{Display, Formatter, Result as FmtResult},
+    io::{Error as IoError, ErrorKind as IoErrorKind},
+};
 use thiserror::Error;
 
 #[derive(Debug, Error)]

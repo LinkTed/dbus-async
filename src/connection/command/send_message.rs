@@ -1,7 +1,9 @@
 use super::super::{Connection, MessageSender};
 use dbus_message_parser::message::Message;
-use futures::channel::mpsc::{Sender as MpscSender, TrySendError};
-use futures::channel::oneshot::Sender as OneshotSender;
+use futures::channel::{
+    mpsc::{Sender as MpscSender, TrySendError},
+    oneshot::Sender as OneshotSender,
+};
 
 impl Connection {
     fn send(&mut self, mut msg: Message) -> Result<u32, TrySendError<Message>> {

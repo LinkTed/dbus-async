@@ -1,10 +1,8 @@
 use async_trait::async_trait;
 use dbus_async::{Binder, DBus, DBusResult, Handler};
-use dbus_message_parser::message::Message;
-use dbus_message_parser::value::Value;
+use dbus_message_parser::{message::Message, value::Value};
 use futures::lock::Mutex;
-use std::convert::TryInto;
-use std::sync::Arc;
+use std::{convert::TryInto, sync::Arc};
 
 // This is a low level example, where the user defines the Handler trait by himself.
 // The object is wrap with a mutex, to the user can have multiple reference to the object.

@@ -1,8 +1,9 @@
 use crate::{DBus, DBusResult};
-use dbus_message_parser::message::Message;
-use dbus_message_parser::value::Value;
-use futures::channel::mpsc::{channel, Receiver};
-use futures::StreamExt;
+use dbus_message_parser::{message::Message, value::Value};
+use futures::{
+    channel::mpsc::{channel, Receiver},
+    StreamExt,
+};
 use std::convert::TryInto;
 use tokio::spawn;
 

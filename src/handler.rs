@@ -1,10 +1,11 @@
 use crate::{DBus, DBusResult};
 use async_trait::async_trait;
-use dbus_message_parser::message::Message;
-use dbus_message_parser::value::ObjectPath;
-use futures::channel::mpsc::{channel, Receiver};
-use futures::lock::Mutex;
-use futures::StreamExt;
+use dbus_message_parser::{message::Message, value::ObjectPath};
+use futures::{
+    channel::mpsc::{channel, Receiver},
+    lock::Mutex,
+    StreamExt,
+};
 use std::sync::Arc;
 
 /// A trait for the generic `Message` handler.

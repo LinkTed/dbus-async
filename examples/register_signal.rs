@@ -1,8 +1,6 @@
 use dbus_async::DBus;
-use dbus_message_parser::message::Message;
-use dbus_message_parser::value::Value;
-use futures::channel::mpsc::channel;
-use futures::stream::StreamExt;
+use dbus_message_parser::{message::Message, value::Value};
+use futures::{channel::mpsc::channel, stream::StreamExt};
 use std::convert::TryInto;
 
 // This is a low level example, where the user create the channel to receive signals from specific

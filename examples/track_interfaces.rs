@@ -1,8 +1,12 @@
 use dbus_async::DBus;
-use dbus_message_parser::message::{Message, MessageType};
-use dbus_message_parser::value::Value;
-use futures::channel::mpsc::{channel, Sender};
-use futures::stream::StreamExt;
+use dbus_message_parser::{
+    message::{Message, MessageType},
+    value::Value,
+};
+use futures::{
+    channel::mpsc::{channel, Sender},
+    stream::StreamExt,
+};
 use std::convert::TryInto;
 
 async fn register_signal(dbus: &DBus, sender: Sender<Message>) {

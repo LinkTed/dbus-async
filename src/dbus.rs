@@ -1,22 +1,23 @@
-use crate::command::Command;
-use crate::connection::Connection;
-use crate::error::DBusResult;
-use crate::introspect::add_introspect;
-use crate::peer::add_peer;
-use crate::stream::Stream;
-use crate::{DBusError, DBusNameFlag};
-use dbus_message_parser::message::{Message, MessageType};
-use dbus_message_parser::value::{Bus, Interface, ObjectPath, Value};
+use crate::{
+    command::Command,
+    connection::Connection,
+    error::DBusResult,
+    introspect::add_introspect,
+    peer::add_peer,
+    stream::Stream,
+    {DBusError, DBusNameFlag},
+};
+use dbus_message_parser::{
+    message::{Message, MessageType},
+    value::{Bus, Interface, ObjectPath, Value},
+};
 use dbus_server_address_parser::Address;
 use futures::channel::mpsc::{
     unbounded, Receiver as MpscReceiver, Sender as MpscSender, UnboundedSender,
 };
 use futures::channel::oneshot::channel;
-use std::collections::HashSet;
-use std::convert::TryInto;
-use std::sync::Arc;
-use tokio::spawn;
-use tokio::task::JoinHandle;
+use std::{collections::HashSet, convert::TryInto, sync::Arc};
+use tokio::{spawn, task::JoinHandle};
 
 /// This struct represents an object to communicate with the DBus daemon.
 #[derive(Clone)]

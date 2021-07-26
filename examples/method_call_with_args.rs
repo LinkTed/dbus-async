@@ -1,6 +1,5 @@
 use dbus_async::DBus;
-use dbus_message_parser::message::Message;
-use dbus_message_parser::value::Value;
+use dbus_message_parser::{message::Message, value::Value};
 use std::convert::TryInto;
 
 #[tokio::main]
