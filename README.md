@@ -16,13 +16,13 @@ You have to specify, which Tokio Runtime should be used.
 * For multi-threaded add this to your `Cargo.toml`:
   ```rust
   [dependencies.tokio]
-  version = " ~1.8.1"
+  version = " ~1.9.0"
   features = ["rt-multi-thread"] 
   ```
 * For single-threaded add this to your `Cargo.toml`:
   ```rust
   [dependencies.tokio]
-  version = "~1.8.1"
+  version = "~1.9.0"
   features = ["rt"] 
   ```
 
