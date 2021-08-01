@@ -1,6 +1,6 @@
 use crate::{DBus, DBusResult, Uuid};
 use dbus_message_parser::{
-    message::{Message, MessageType},
+    message::{Message, MessageHeader, MessageType},
     value::Value,
 };
 use futures::{
@@ -12,6 +12,7 @@ use std::{
     convert::TryInto,
     io::Error as IoError,
     str::{from_utf8, Utf8Error},
+    vec::IntoIter,
 };
 use thiserror::Error;
 use tokio::{fs::File, io::AsyncReadExt, spawn};
@@ -72,15 +73,15 @@ async fn get_machine_id_from_file() -> Result<Uuid, ()> {
     }
 }
 
-async fn get_machine_id(request: &Message) -> Message {
-    match request.method_return() {
+async fn get_machine_id(header: &MessageHeader) -> Message {
+    match header.method_return() {
         Ok(mut msg) => match get_machine_id_from_file().await {
             Ok(uuid) => {
                 let uuid = encode(&uuid);
                 msg.add_value(Value::String(uuid));
                 msg
             }
-            Err(_) => request.error(
+            Err(_) => header.error(
                 "org.freedesktop.DBus.Peer.MachineIdError"
                     .try_into()
                     .unwrap(),
@@ -94,42 +95,44 @@ async fn get_machine_id(request: &Message) -> Message {
 /// This is the handle method for the [`org.freedesktop.DBus.Peer`] interface.
 ///
 /// [`org.freedesktop.DBus.Peer`]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-peer
-pub async fn handle_peer(dbus: &DBus, request: &Message) {
-    let member = if let Some(member) = request.get_member() {
+pub async fn handle_peer(
+    dbus: &DBus,
+    header: MessageHeader,
+    mut body_iter: IntoIter<Value>,
+) -> DBusResult<()> {
+    let member = if let Some(member) = header.get_member() {
         member
     } else {
-        return;
+        return Ok(());
     };
 
     let response = match member.as_ref() {
         "GetMachineId" => {
-            if request.get_body().is_empty() {
-                get_machine_id(request).await
+            if let None = body_iter.next() {
+                get_machine_id(&header).await
             } else {
-                request.invalid_args("Too many arguments".to_string())
+                header.invalid_args("Too many arguments".to_string())
             }
         }
         "Ping" => {
-            if request.get_body().is_empty() {
+            if let None = body_iter.next() {
                 // The unwrap function call will never panic because we check the type at the
                 // beginning of the while loop.
-                request.method_return().unwrap()
+                header.method_return().unwrap()
             } else {
-                request.invalid_args("Too many arguments".to_string())
+                header.invalid_args("Too many arguments".to_string())
             }
         }
         _ => {
-            if let Some(msg) = request.unknown_member() {
+            if let Some(msg) = header.unknown_member() {
                 msg
             } else {
-                return;
+                return Ok(());
             }
         }
     };
 
-    if let Err(e) = dbus.send(response) {
-        error!("could not send message: {}", e);
-    }
+    dbus.send(response)
 }
 
 async fn peer(dbus: DBus, mut receiver: Receiver<Message>) {
@@ -138,7 +141,14 @@ async fn peer(dbus: DBus, mut receiver: Receiver<Message>) {
             continue;
         }
 
-        handle_peer(&dbus, &request).await;
+        if let Ok((header, body)) = request.split() {
+            if let Err(e) = handle_peer(&dbus, header, body.into_iter()).await {
+                error!(
+                    "Could not handle method for org.freedesktop.DBus.Peer: {}",
+                    e
+                );
+            }
+        }
     }
 }
 
