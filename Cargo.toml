@@ -1,6 +1,6 @@
 [package]
 name = "dbus-async"
-version = "2.2.0"
+version = "2.2.1"
 authors = ["LinkTed <link.ted@mailbox.org>"]
 description = "Asynchronous DBus library"
 readme = "README.md"
