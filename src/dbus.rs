@@ -16,7 +16,7 @@ use futures::channel::mpsc::{
     unbounded, Receiver as MpscReceiver, Sender as MpscSender, UnboundedSender,
 };
 use futures::channel::oneshot::channel;
-use std::{collections::HashSet, convert::TryInto, sync::Arc};
+use std::{collections::HashSet, convert::TryInto, env::var, sync::Arc};
 use tokio::{spawn, task::JoinHandle};
 
 /// This struct represents an object to communicate with the DBus daemon.
@@ -38,8 +38,8 @@ impl DBus {
     /// [introspectable]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-introspectable
     /// [`org.freedesktop.DBus.Peer`]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-peer
     pub async fn session(introspectable: bool, peer: bool) -> DBusResult<(DBus, JoinHandle<()>)> {
-        if let Some(path) = option_env!("DBUS_SESSION_BUS_ADDRESS") {
-            DBus::new(path, introspectable, peer).await
+        if let Ok(path) = var("DBUS_SESSION_BUS_ADDRESS") {
+            DBus::new(&path, introspectable, peer).await
         } else {
             // It could not connect to any socket
             Err(DBusError::DBusSessionBusAddress)
@@ -58,12 +58,12 @@ impl DBus {
     /// [introspectable]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-introspectable
     /// [`org.freedesktop.DBus.Peer`]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-peer
     pub async fn system(introspectable: bool, peer: bool) -> DBusResult<(DBus, JoinHandle<()>)> {
-        let path = if let Some(path) = option_env!("DBUS_SYSTEM_BUS_ADDRESS") {
+        let path = if let Ok(path) = var("DBUS_SYSTEM_BUS_ADDRESS") {
             path
         } else {
-            "unix:path=/var/run/dbus/system_bus_socket"
+            "unix:path=/var/run/dbus/system_bus_socket".to_string()
         };
-        DBus::new(path, introspectable, peer).await
+        DBus::new(&path, introspectable, peer).await
     }
 
     /// Connect to the specific (`addressses`) DBus daemon.
