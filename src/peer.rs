@@ -108,14 +108,14 @@ pub async fn handle_peer(
 
     let response = match member.as_ref() {
         "GetMachineId" => {
-            if let None = body_iter.next() {
+            if body_iter.next().is_none() {
                 get_machine_id(&header).await
             } else {
                 header.invalid_args("Too many arguments".to_string())
             }
         }
         "Ping" => {
-            if let None = body_iter.next() {
+            if body_iter.next().is_none() {
                 // The unwrap function call will never panic because we check the type at the
                 // beginning of the while loop.
                 header.method_return().unwrap()
