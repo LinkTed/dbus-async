@@ -1,5 +1,6 @@
 use crate::{command::Command, stream::StreamError};
 use dbus_message_parser::{
+    match_rule::MatchRule,
     message::Message,
     value::{Error as ErrorName, Interface, ObjectPath},
 };
@@ -20,6 +21,8 @@ pub enum DBusError {
     DeleteMethodCallInterface(Option<Interface>),
     AddSignal(ObjectPath),
     DeleteSignal,
+    AddMatchRules(Vec<MatchRule>),
+    DeleteMatchRules,
     ReceiveMessage(Option<Message>),
     StreamError(#[from] StreamError),
     DBusSessionBusAddress,
@@ -55,6 +58,9 @@ impl From<TrySendError<Command>> for DBusError {
             Command::AddSignal(object_path, _, _) => DBusError::AddSignal(object_path),
             Command::DeleteSignalSender(_) => DBusError::DeleteSignal,
             Command::DeleteSignalReceiver(_) => DBusError::DeleteSignal,
+            Command::AddMatchRules(match_rules, _) => DBusError::AddMatchRules(match_rules),
+            Command::DeleteMatchRulesSender(_) => DBusError::DeleteMatchRules,
+            Command::DeleteMatchRulesReceiver(_) => DBusError::DeleteMatchRules,
             Command::Close => DBusError::Close,
         }
     }
@@ -103,6 +109,14 @@ impl Display for DBusError {
             }
             DBusError::AddSignal(path) => write!(f, "Could not add channel for signals: {}", path),
             DBusError::DeleteSignal => write!(f, "Could not delete channel for signals"),
+            DBusError::AddMatchRules(match_rules) => {
+                write!(f, "Could not add channel for matches rules:")?;
+                for match_rule in match_rules.iter() {
+                    write!(f, " {}", match_rule)?;
+                }
+                Ok(())
+            }
+            DBusError::DeleteMatchRules => write!(f, "Could not delete channel for match_rules"),
             DBusError::ReceiveMessage(msg) => {
                 write!(f, "Could not receive response for message: {:?}", msg)
             }

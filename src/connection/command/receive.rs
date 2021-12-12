@@ -63,6 +63,17 @@ impl Connection {
                     vec_sender_message.retain(|(_, sender)| !sender.is_connected_to(&receiver));
                 }
             }
+            Command::AddMatchRules(match_rules, sender) => {
+                self.match_rules.push((match_rules, sender));
+            }
+            Command::DeleteMatchRulesSender(sender_other) => {
+                self.match_rules
+                    .retain(|(_, sender)| !sender_other.same_receiver(sender));
+            }
+            Command::DeleteMatchRulesReceiver(receiver) => {
+                self.match_rules
+                    .retain(|(_, sender)| !sender.is_connected_to(&receiver));
+            }
             Command::Close => {
                 // Stop the server.
                 self.command_receiver.close();

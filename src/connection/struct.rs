@@ -1,5 +1,6 @@
 use crate::command::Command;
 use dbus_message_parser::{
+    match_rule::MatchRule,
     message::Message,
     value::{Interface, ObjectPath},
 };
@@ -22,6 +23,7 @@ pub(crate) struct Connection {
         HashMap<ObjectPath, Vec<(Option<fn(&Message) -> bool>, MpscSender<Message>)>>,
     pub(super) method_calls: HashMap<ObjectPath, MpscSender<Message>>,
     pub(super) method_calls_interface: HashMap<Interface, MpscSender<Message>>,
+    pub(super) match_rules: Vec<(Vec<MatchRule>, MpscSender<Message>)>,
     pub(super) command_receiver: UnboundedReceiver<Command>,
     pub(super) message_sink: UnboundedSender<Message>,
     pub(super) message_stream: UnboundedReceiver<Message>,
@@ -39,6 +41,7 @@ impl Connection {
             signals: HashMap::new(),
             method_calls: HashMap::new(),
             method_calls_interface: HashMap::new(),
+            match_rules: Vec::new(),
             command_receiver,
             message_sink,
             message_stream,

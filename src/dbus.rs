@@ -8,14 +8,15 @@ use crate::{
     {DBusError, DBusNameFlag},
 };
 use dbus_message_parser::{
+    match_rule::MatchRule,
     message::{Message, MessageType},
     value::{Bus, Interface, ObjectPath, Value},
 };
 use dbus_server_address_parser::Address;
-use futures::channel::mpsc::{
-    unbounded, Receiver as MpscReceiver, Sender as MpscSender, UnboundedSender,
+use futures::channel::{
+    mpsc::{unbounded, Receiver as MpscReceiver, Sender as MpscSender, UnboundedSender},
+    oneshot::channel,
 };
-use futures::channel::oneshot::channel;
 use std::{collections::HashSet, convert::TryInto, env::var, sync::Arc};
 use tokio::{spawn, task::JoinHandle};
 
@@ -325,6 +326,43 @@ impl DBus {
     /// [`ObjectPath`]: dbus_message_parser::value::ObjectPath
     pub fn delete_signal_receiver(&self, receiver: MpscReceiver<Message>) -> DBusResult<()> {
         let command = Command::DeleteSignalReceiver(receiver);
+        self.command_sender.unbounded_send(command)?;
+        Ok(())
+    }
+
+    /// Add a channel to a specific [`MatchRule`]s.
+    ///
+    /// The channel will receive all message, which match the given [`MatchRule`]s.
+    ///
+    /// [`MatchRule`]: dbus_message_parser::match_rule::MatchRule
+    pub fn add_match_rules(
+        &self,
+        match_rules: Vec<MatchRule>,
+        sender: MpscSender<Message>,
+    ) -> DBusResult<()> {
+        let command = Command::AddMatchRules(match_rules, sender);
+        self.command_sender.unbounded_send(command)?;
+        Ok(())
+    }
+
+    /// Delete the channel for every [`MatchRule`]s, which the given sender is connected to
+    /// (see [`add_match_rules`]).
+    ///
+    /// [`add_match_rules`]: #method.add_match_rules
+    /// [`MatchRule`]: dbus_message_parser::match_rule::MatchRule
+    pub fn delete_match_rules_sender(&self, sender: MpscSender<Message>) -> DBusResult<()> {
+        let command = Command::DeleteMatchRulesSender(sender);
+        self.command_sender.unbounded_send(command)?;
+        Ok(())
+    }
+
+    /// Delete the channel for every [`MatchRule`]s, which the given sender is connected to
+    /// (see [`add_match_rules`]).
+    ///
+    /// [`add_match_rules`]: #method.add_match_rules
+    /// [`MatchRule`]: dbus_message_parser::match_rule::MatchRule
+    pub fn delete_match_rules_receiver(&self, receiver: MpscReceiver<Message>) -> DBusResult<()> {
+        let command = Command::DeleteMatchRulesReceiver(receiver);
         self.command_sender.unbounded_send(command)?;
         Ok(())
     }

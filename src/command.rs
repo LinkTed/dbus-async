@@ -1,4 +1,5 @@
 use dbus_message_parser::{
+    match_rule::MatchRule,
     message::Message,
     value::{Interface, ObjectPath},
 };
@@ -29,5 +30,8 @@ pub enum Command {
     ),
     DeleteSignalSender(MpscSender<Message>),
     DeleteSignalReceiver(MpscReceiver<Message>),
+    AddMatchRules(Vec<MatchRule>, MpscSender<Message>),
+    DeleteMatchRulesSender(MpscSender<Message>),
+    DeleteMatchRulesReceiver(MpscReceiver<Message>),
     Close,
 }

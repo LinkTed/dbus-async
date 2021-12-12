@@ -25,27 +25,31 @@ async fn main() {
     );
     let match_rules = vec![
         MatchRule::Type(MessageType::Signal),
-        MatchRule::Sender("org.freedesktop.DBus".try_into().unwrap()),
-        MatchRule::Path("/org/example/DBus".try_into().unwrap()),
-        MatchRule::Interface("org.freedesktop.DBus".try_into().unwrap()),
+        //MatchRule::Sender("org.freedesktop.DBus".try_into().unwrap()),
+        //MatchRule::Path("/org/example/DBus".try_into().unwrap()),
+        //MatchRule::Interface("org.freedesktop.DBus".try_into().unwrap()),
     ];
+    println!("{}", MatchRule::encode(&match_rules));
     msg_add_match.add_value(Value::String(MatchRule::encode(&match_rules)));
     dbus.call(msg_add_match)
         .await
         .expect("Could not add match rule");
 
-    // Initialize the object path
-    let object_path = "org/freedesktop/DBus".try_into().unwrap();
+    // Initialize the match rules to receive only signals from org.freedesktop.DBus
+    let match_rules = vec![
+        MatchRule::Type(MessageType::Signal),
+        MatchRule::Sender("org.freedesktop.DBus".try_into().unwrap()),
+    ];
 
     // Create a FIFO with a size of 1024
     let (sender, mut receiver) = channel::<Message>(1024);
 
     // Register the object path
-    if let Err(e) = dbus.add_signal(object_path, None, sender) {
+    if let Err(e) = dbus.add_match_rules(match_rules, sender) {
         panic!("Cannot add path: {:?}", e);
     }
 
-    // Get the next signal from the object path "org.freedesktop.DBus"
+    // Get the any signal from the DBus
     while let Some(msg) = receiver.next().await {
         println!("{:?}", msg);
     }
