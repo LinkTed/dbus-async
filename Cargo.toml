@@ -20,8 +20,8 @@ categories = ["asynchronous"]
 
 [dependencies]
 log = "~0.4.14"
-futures = "~0.3.18"
-dbus-message-parser = "~4.3.0"
+futures = "~0.3.17"
+dbus-message-parser = "~4.3.1"
 dbus-server-address-parser = "~1.0.1"
 hex = "~0.4.3"
 bytes = "~1.1.0"
@@ -34,9 +34,9 @@ thiserror = "~1.0.30"
 async-recursion = "~0.3.2"
 
 [dependencies.tokio]
-version = "~1.14.0"
-features = ["fs", "net", "io-util", "process"]
+version = "~1.15.0"
+features = ["fs", "net", "io-util", "process", "macros"]
 
 [dev-dependencies.tokio]
-version = "~1.14.0"
-features = ["rt-multi-thread", "macros"]
+version = "~1.15.0"
+features = ["rt-multi-thread"]
