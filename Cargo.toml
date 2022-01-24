@@ -32,6 +32,13 @@ retain_mut = "~0.1.5"
 async-trait = "~0.1.52"
 thiserror = "~1.0.30"
 async-recursion = "~0.3.2"
+serde-xml-rs = {version = "0.5.0", optional = true}
+serde = {version = "1.0.118", optional = true}
+serde_derive = {version = "1.0.118", optional = true}
+
+[features]
+introspect = ["proxy", "serde-xml-rs", "serde_derive", "serde"]
+proxy = []
 
 [dependencies.tokio]
 version = "~1.15.0"
@@ -40,3 +47,6 @@ features = ["fs", "net", "io-util", "process", "macros"]
 [dev-dependencies.tokio]
 version = "~1.15.0"
 features = ["rt-multi-thread"]
+
+[package.metadata.docs.rs]
+features = ["introspect"]
