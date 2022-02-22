@@ -11,6 +11,8 @@ mod handler;
 mod introspect;
 mod name_flag;
 mod peer;
+#[cfg(feature = "proxy")]
+pub mod proxy;
 mod stream;
 
 type Uuid = [u8; 16];
